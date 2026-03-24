@@ -1,0 +1,28 @@
+type Query {
+  product(id: ID!): Product
+  products: [Product!]!
+  category(id: ID!): Category
+  categories: [Category!]!
+}
+
+type Product {
+  id: ID!
+  title: String!
+  description: String
+  price: Float!
+  inStock: Boolean!
+  status: ProductStatus!
+  categories: [Category!]!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  products: [Product!]!
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}

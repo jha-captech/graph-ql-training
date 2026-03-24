@@ -1,0 +1,120 @@
+{
+  "uuid": "a8f3c5d1-4e2b-4a9c-8d3e-1f6a7b8c9d0e",
+  "lastMigration": 32,
+  "name": "Shipping Estimates API",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 4010,
+  "hostname": "0.0.0.0",
+  "routes": [
+    {
+      "uuid": "b9e4d6f2-5f3c-4b0d-9e4f-2g7b8c9d0f1a",
+      "type": "http",
+      "documentation": "Shipping estimate endpoint with multiple scenarios",
+      "method": "get",
+      "endpoint": "estimate",
+      "responses": [
+        {
+          "uuid": "c0f5e7g3-6g4d-5c1e-0f5g-3h8c9d0e1g2b",
+          "body": "{ \"error\": \"Service unavailable\" }",
+          "latency": 0,
+          "statusCode": 500,
+          "label": "Error - Service unavailable",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "zip",
+              "value": "99999",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "d1g6f8h4-7h5e-6d2f-1g6h-4i9d0e1f2h3c",
+          "body": "{ \"provider\": \"FastShip\", \"days\": 3, \"cost\": 5.99 }",
+          "latency": 3000,
+          "statusCode": 200,
+          "label": "Success with latency",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "zip",
+              "value": "00000",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "e2h7g9i5-8i6f-7e3g-2h7i-5j0e1f2g3i4d",
+          "body": "{ \"provider\": \"FastShip\", \"days\": 3, \"cost\": 5.99 }",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "b9e4d6f2-5f3c-4b0d-9e4f-2g7b8c9d0f1a"
+    }
+  ],
+  "folders": [],
+  "proxyMode": false,
+  "proxyHost": "",
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
+  "data": [],
+  "callbacks": [],
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  }
+}

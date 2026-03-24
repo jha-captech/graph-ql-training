@@ -1,7 +1,7 @@
 # Logs
 logs
 *.log
-npm-debug.log*
+bun-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
@@ -47,8 +47,8 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
-# Optional npm cache directory
-.npm
+# Optional bun cache directory
+.bun
 
 # Optional eslint cache
 .eslintcache
@@ -59,7 +59,7 @@ web_modules/
 # Optional REPL history
 .node_repl_history
 
-# Output of 'npm pack'
+# Output of 'bun pack'
 *.tgz
 
 # Yarn Integrity file
@@ -137,3 +137,12 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# SQLite database files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+**/reports/
+**/.env

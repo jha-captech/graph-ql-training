@@ -1,0 +1,320 @@
+# Sample operations for manual exploration of Stage 09: Pagination
+
+# ============================================================
+# Basic Pagination - First page of products
+# ============================================================
+query FirstPageOfProducts {
+  productsConnection(first: 10) {
+    edges {
+      node {
+        id
+        title
+        price
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Forward Pagination - Get next page using cursor
+# ============================================================
+query NextPageOfProducts {
+  productsConnection(first: 10, after: "PASTE_CURSOR_FROM_PREVIOUS_QUERY") {
+    edges {
+      node {
+        id
+        title
+        price
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Backward Pagination - Get previous page
+# ============================================================
+query PreviousPageOfProducts {
+  productsConnection(last: 10, before: "PASTE_CURSOR_FROM_LATER_PAGE") {
+    edges {
+      node {
+        id
+        title
+        price
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Pagination with Category Filter
+# ============================================================
+query ProductsByCategoryPaginated {
+  productsConnection(first: 5, filter: { categoryId: "cat-001" }) {
+    edges {
+      node {
+        id
+        title
+        price
+        categories {
+          name
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Pagination with Price Range Filter
+# ============================================================
+query ProductsByPriceRange {
+  productsConnection(first: 10, filter: { minPrice: 5000, maxPrice: 20000 }) {
+    edges {
+      node {
+        id
+        title
+        price
+        description
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Pagination with Status Filter (Active products only)
+# ============================================================
+query ActiveProductsPaginated {
+  productsConnection(first: 10, filter: { status: ACTIVE }) {
+    edges {
+      node {
+        id
+        title
+        price
+        status
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Multiple Filters Combined
+# ============================================================
+query FilteredProductsPaginated {
+  productsConnection(
+    first: 5
+    filter: { categoryId: "cat-002", minPrice: 10000, status: ACTIVE }
+  ) {
+    edges {
+      node {
+        id
+        title
+        price
+        status
+        categories {
+          name
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Small Page Size - Testing pagination with just 3 items
+# ============================================================
+query SmallPageSize {
+  productsConnection(first: 3) {
+    edges {
+      node {
+        id
+        title
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Large Page Size - Testing with many items
+# ============================================================
+query LargePageSize {
+  productsConnection(first: 50) {
+    edges {
+      node {
+        id
+        title
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Rich Product Data - Full product details in paginated response
+# ============================================================
+query RichProductsPaginated {
+  productsConnection(first: 5) {
+    edges {
+      node {
+        id
+        title
+        description
+        price
+        inStock
+        status
+        averageRating
+        categories {
+          id
+          name
+        }
+        reviews {
+          rating
+          author {
+            name
+          }
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Compare Old vs. New API - Deprecated products field
+# ============================================================
+query DeprecatedProductsList {
+  products {
+    id
+    title
+    price
+  }
+}
+
+# ============================================================
+# Verify Backwards Compatibility - Both endpoints work
+# ============================================================
+query BothEndpoints {
+  # Old API (deprecated but still works)
+  products {
+    id
+    title
+  }
+
+  # New API (paginated)
+  productsConnection(first: 5) {
+    edges {
+      node {
+        id
+        title
+      }
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Variables Example - Using query variables for pagination
+# ============================================================
+query ProductsWithVariables(
+  $first: Int!
+  $after: String
+  $filter: ProductFilterInput
+) {
+  productsConnection(first: $first, after: $after, filter: $filter) {
+    edges {
+      node {
+        id
+        title
+        price
+        status
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# Example variables for the above query:
+# {
+#   "first": 10,
+#   "after": null,
+#   "filter": {
+#     "categoryId": "cat-001",
+#     "minPrice": 5000,
+#     "maxPrice": 15000,
+#     "status": "ACTIVE"
+#   }
+# }

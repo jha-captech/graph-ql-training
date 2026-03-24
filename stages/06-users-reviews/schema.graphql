@@ -1,0 +1,89 @@
+type Query {
+  product(id: ID!): Product
+  products: [Product!]!
+  category(id: ID!): Category
+  categories: [Category!]!
+  user(id: ID!): User
+  users: [User!]!
+}
+
+type Mutation {
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+  updateProduct(id: ID!, input: UpdateProductInput!): UpdateProductPayload!
+  createReview(input: CreateReviewInput!): CreateReviewPayload!
+}
+
+type Product {
+  id: ID!
+  title: String!
+  description: String
+  price: Float!
+  inStock: Boolean!
+  status: ProductStatus!
+  categories: [Category!]!
+  reviews: [Review!]!
+  averageRating: Float
+}
+
+type Category {
+  id: ID!
+  name: String!
+  products: [Product!]!
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  reviews: [Review!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Review {
+  id: ID!
+  rating: Int!
+  body: String
+  author: User!
+  product: Product!
+  createdAt: String!
+  updatedAt: String!
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+input CreateProductInput {
+  title: String!
+  description: String
+  price: Float!
+  categoryIds: [ID!]
+}
+
+input UpdateProductInput {
+  title: String
+  description: String
+  price: Float
+  status: ProductStatus
+}
+
+input CreateReviewInput {
+  productId: ID!
+  rating: Int!
+  body: String
+}
+
+type CreateProductPayload {
+  product: Product
+}
+
+type UpdateProductPayload {
+  product: Product
+}
+
+type CreateReviewPayload {
+  review: Review
+}

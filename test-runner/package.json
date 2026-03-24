@@ -1,0 +1,21 @@
+{
+  "name": "graphql-training-test-runner",
+  "version": "1.0.0",
+  "description": "Cucumber.js test runner for GraphQL Training curriculum",
+  "private": true,
+  "scripts": {
+    "test": "cucumber-js",
+    "test:stage": "cucumber-js --tags @stage:${STAGE:-01}"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^11.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/ws": "^8.5.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.5.0"
+  }
+}

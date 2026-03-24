@@ -1,0 +1,146 @@
+{
+  "uuid": "f3i8h0j6-9j7g-8f4h-3i8j-6k1f2g3h4j5e",
+  "lastMigration": 32,
+  "name": "Tax Calculation API",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 4011,
+  "hostname": "0.0.0.0",
+  "routes": [
+    {
+      "uuid": "g4j9i1k7-0k8h-9g5i-4j9k-7l2g3h4i5k6f",
+      "type": "http",
+      "documentation": "Tax rate endpoint for different states",
+      "method": "get",
+      "endpoint": "tax-rate",
+      "responses": [
+        {
+          "uuid": "h5k0j2l8-1l9i-0h6j-5k0l-8m3h4i5j6l7g",
+          "body": "{ \"error\": \"Invalid state\" }",
+          "latency": 0,
+          "statusCode": 500,
+          "label": "Error - Invalid state",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "state",
+              "value": "XX",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "i6l1k3m9-2m0j-1i7k-6l1m-9n4i5j6k7m8h",
+          "body": "{ \"rate\": 0, \"state\": \"OR\" }",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success - Oregon (no tax)",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "state",
+              "value": "OR",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "j7m2l4n0-3n1k-2j8l-7m2n-0o5j6k7l8n9i",
+          "body": "{ \"rate\": 0.0725, \"state\": \"CA\" }",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success - California",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "state",
+              "value": "CA",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "k8n3m5o1-4o2l-3k9m-8n3o-1p6k7l8m9o0j",
+          "body": "{ \"rate\": 0.05, \"state\": \"DEFAULT\" }",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success - Default",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "g4j9i1k7-0k8h-9g5i-4j9k-7l2g3h4i5k6f"
+    }
+  ],
+  "folders": [],
+  "proxyMode": false,
+  "proxyHost": "",
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
+  "data": [],
+  "callbacks": [],
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  }
+}

@@ -1,0 +1,151 @@
+interface Node {
+  id: ID!
+}
+
+interface Timestamped {
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Query {
+  me: User
+  node(id: ID!): Node
+  search(term: String!): [SearchResult!]!
+  product(id: ID!): Product
+  products: [Product!]! @deprecated(reason: "Use productsConnection instead")
+  productsConnection(
+    first: Int
+    after: String
+    last: Int
+    before: String
+    filter: ProductFilterInput
+  ): ProductConnection!
+  category(id: ID!): Category
+  categories: [Category!]!
+  user(id: ID!): User
+  users: [User!]!
+}
+
+type Mutation {
+  createProduct(input: CreateProductInput!): CreateProductResult!
+  updateProduct(id: ID!, input: UpdateProductInput!): UpdateProductPayload!
+  createReview(input: CreateReviewInput!): CreateReviewPayload!
+}
+
+union SearchResult = Product | Category | User
+union CreateProductResult = CreateProductSuccess | ValidationError
+
+type CreateProductSuccess {
+  product: Product!
+}
+
+type ValidationError {
+  message: String!
+  field: String
+  code: String!
+}
+
+type Product implements Node & Timestamped {
+  id: ID!
+  title: String!
+  description: String
+  price: Float!
+  inStock: Boolean!
+  status: ProductStatus!
+  categories: [Category!]!
+  reviews: [Review!]!
+  averageRating: Float
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Category implements Node {
+  id: ID!
+  name: String!
+  products: [Product!]!
+}
+
+type User implements Node & Timestamped {
+  id: ID!
+  email: String!
+  name: String!
+  role: Role!
+  reviews: [Review!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Review implements Node & Timestamped {
+  id: ID!
+  rating: Int!
+  body: String
+  author: User!
+  product: Product!
+  createdAt: String!
+  updatedAt: String!
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum Role {
+  CUSTOMER
+  SELLER
+  ADMIN
+}
+
+input ProductFilterInput {
+  categoryId: ID
+  minPrice: Float
+  maxPrice: Float
+  status: ProductStatus
+}
+
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ProductEdge {
+  node: Product!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+input CreateProductInput {
+  title: String!
+  description: String
+  price: Float!
+  categoryIds: [ID!]
+}
+
+input UpdateProductInput {
+  title: String
+  description: String
+  price: Float
+  status: ProductStatus
+}
+
+input CreateReviewInput {
+  productId: ID!
+  rating: Int!
+  body: String
+}
+
+type UpdateProductPayload {
+  product: Product
+}
+
+type CreateReviewPayload {
+  review: Review
+}

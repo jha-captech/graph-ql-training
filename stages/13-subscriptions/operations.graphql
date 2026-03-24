@@ -1,0 +1,178 @@
+# Sample Operations for Stage 13: Subscriptions
+# Use these queries to manually explore the subscription functionality
+
+# ============================================================
+# SUBSCRIPTIONS
+# ============================================================
+
+# Subscribe to order status changes for a specific order
+subscription OrderStatusUpdates {
+  orderStatusChanged(orderId: "ord-001") {
+    id
+    status
+    buyer {
+      id
+      name
+    }
+    items {
+      id
+      product {
+        title
+      }
+      quantity
+      unitPrice
+    }
+    total
+    updatedAt
+  }
+}
+
+# Subscribe to all new products
+subscription NewProducts {
+  productCreated {
+    id
+    title
+    description
+    price
+    status
+    seller {
+      name
+    }
+    createdAt
+  }
+}
+
+# ============================================================
+# MUTATIONS TO TRIGGER SUBSCRIPTION EVENTS
+# ============================================================
+
+# Trigger orderStatusChanged subscription by updating an order
+mutation UpdateOrderStatus {
+  updateOrderStatus(id: "ord-001", status: SHIPPED) {
+    id
+    status
+    updatedAt
+  }
+}
+
+# Trigger productCreated subscription by creating a product
+mutation CreateNewProduct {
+  createProduct(
+    input: {
+      title: "New Wireless Headphones"
+      description: "Premium noise-cancelling headphones"
+      price: 29999
+      categoryIds: ["cat-001"]
+    }
+  ) {
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+        price
+        createdAt
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# QUERIES TO VERIFY SUBSCRIPTION DATA
+# ============================================================
+
+# Query the order to see current status
+query GetOrder {
+  order(id: "ord-001") {
+    id
+    status
+    buyer {
+      name
+    }
+    items {
+      product {
+        title
+      }
+      quantity
+    }
+    total
+  }
+}
+
+# Query all orders to see available order IDs
+query ListOrders {
+  orders {
+    id
+    status
+    buyer {
+      name
+    }
+    total
+    createdAt
+  }
+}
+
+# Query recently created products
+query ListProducts {
+  products {
+    id
+    title
+    price
+    createdAt
+  }
+}
+
+# ============================================================
+# TESTING WORKFLOW
+# ============================================================
+#
+# 1. Open two GraphQL clients (e.g., GraphiQL, Altair, or Postman)
+#
+# 2. In Client 1:
+#    - Run the OrderStatusUpdates subscription
+#    - Leave it connected and waiting
+#
+# 3. In Client 2:
+#    - Run the UpdateOrderStatus mutation
+#
+# 4. In Client 1:
+#    - You should see the subscription event arrive with the updated order
+#
+# 5. Repeat for productCreated:
+#    - Client 1: Run NewProducts subscription
+#    - Client 2: Run CreateNewProduct mutation
+#    - Client 1: See the new product event arrive
+#
+# ============================================================
+
+# Test multiple simultaneous subscriptions
+# Open multiple clients and subscribe to the same order with different fields
+subscription MinimalOrderUpdate {
+  orderStatusChanged(orderId: "ord-001") {
+    id
+    status
+  }
+}
+
+# Subscribe to a different order (won't receive ord-001 events)
+subscription OtherOrderUpdates {
+  orderStatusChanged(orderId: "ord-004") {
+    id
+    status
+    buyer {
+      name
+    }
+  }
+}
+
+# Update a different order to test filtering
+mutation UpdateAnotherOrder {
+  updateOrderStatus(id: "ord-004", status: CONFIRMED) {
+    id
+    status
+  }
+}

@@ -1,0 +1,58 @@
+# Same schema as stage 04 — this stage teaches query language features,
+# not new schema additions.
+
+type Query {
+  product(id: ID!): Product
+  products: [Product!]!
+  category(id: ID!): Category
+  categories: [Category!]!
+}
+
+type Mutation {
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+  updateProduct(id: ID!, input: UpdateProductInput!): UpdateProductPayload!
+}
+
+type Product {
+  id: ID!
+  title: String!
+  description: String
+  price: Float!
+  inStock: Boolean!
+  status: ProductStatus!
+  categories: [Category!]!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  products: [Product!]!
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+input CreateProductInput {
+  title: String!
+  description: String
+  price: Float!
+  categoryIds: [ID!]
+}
+
+input UpdateProductInput {
+  title: String
+  description: String
+  price: Float
+  status: ProductStatus
+}
+
+type CreateProductPayload {
+  product: Product
+}
+
+type UpdateProductPayload {
+  product: Product
+}
