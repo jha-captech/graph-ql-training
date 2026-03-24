@@ -23,18 +23,19 @@ git clone <repo-url> && cd graph-ql-training
 # 2. Run the setup script (checks prerequisites, creates .env, installs test runner)
 ./setup.sh
 
-# 3. Pick a stage and set up its database
-task db:reset STAGE=02
+# 3. Create your first stage branch and set up the database
+git checkout -b stage/01
+task db:reset STAGE=02   # stage 01 has no database
 
 # 4. Read the stage materials
-cat stages/02-types-and-enums/concepts.md
-cat stages/02-types-and-enums/schema.graphql
+cat stages/01-hello-graphql/concepts.md
+cat stages/01-hello-graphql/schema.graphql
 
 # 5. Build your GraphQL server (in your language of choice)
 #    targeting http://localhost:4000/graphql
 
 # 6. Run the tests for your stage
-cd test-runner && npx cucumber-js --tags @stage:02
+cd test-runner && npx cucumber-js --tags @stage:01
 ```
 
 You can also pass a stage number to do steps 2 and 3 at once:
@@ -42,6 +43,37 @@ You can also pass a stage number to do steps 2 and 3 at once:
 ```bash
 ./setup.sh 02
 ```
+
+## Branching Strategy
+
+Each stage builds on the previous one — your branches should too. Create a new branch from your current stage when you're ready to move on:
+
+```bash
+# Starting stage 01 (branch from main)
+git checkout main
+git checkout -b stage/01
+# ... implement, test, commit ...
+
+# Moving to stage 02 (branch from stage/01)
+git checkout -b stage/02
+task db:reset STAGE=02
+# ... implement, test, commit ...
+
+# Moving to stage 03 (branch from stage/02)
+git checkout -b stage/03
+task db:reset STAGE=03
+# ... implement, test, commit ...
+```
+
+This gives you:
+
+- **Cumulative progress** — your server implementation carries forward naturally, just like the schemas do.
+- **Clean checkpoints** — if stage 05 goes sideways, go back to `stage/04` and re-branch.
+- **Full history** — you can diff between stages to see exactly what you added.
+
+> **Keep `main` clean.** The `main` branch contains the curriculum materials (stages, migrations, seed data, tests). Never commit your server implementation to `main` — always work on a `stage/*` branch.
+
+We recommend putting your server implementation in a `server/` directory at the project root to keep it separate from the curriculum materials.
 
 ## How It Works
 
