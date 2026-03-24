@@ -17,12 +17,11 @@ Install these tools before starting:
 ## Quick Start
 
 ```bash
-# 1. Clone and set up environment
+# 1. Clone the repo
 git clone <repo-url> && cd graph-ql-training
-task env:init
 
-# 2. Install the test runner
-cd test-runner && npm install && cd ..
+# 2. Run the setup script (checks prerequisites, creates .env, installs test runner)
+./setup.sh
 
 # 3. Pick a stage and set up its database
 task db:reset STAGE=02
@@ -36,6 +35,12 @@ cat stages/02-types-and-enums/schema.graphql
 
 # 6. Run the tests for your stage
 cd test-runner && npx cucumber-js --tags @stage:02
+```
+
+You can also pass a stage number to do steps 2 and 3 at once:
+
+```bash
+./setup.sh 02
 ```
 
 ## How It Works

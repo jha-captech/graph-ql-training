@@ -7,6 +7,11 @@ vars:
   SEED_DIR: ./seed-data
 
 tasks:
+  setup:
+    desc: Run full setup (check prerequisites, init env, install test runner)
+    cmds:
+      - ./setup.sh {{.STAGE | default ""}}
+
   env:init:
     desc: Create .env from local.env (will not overwrite existing .env)
     cmds:
