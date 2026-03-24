@@ -96,7 +96,7 @@ cd test-runner && bunx cucumber-js --tags @stage:XX
 git add -A && git commit -m "stage XX complete"
 ```
 
-Each stage builds on the previous one. Schemas are cumulative — stage 06's schema includes everything from stages 01-05 plus new additions.
+Each stage builds on the previous one. Schemas are cumulative — stage 06's schema includes everything from stages 01-05 plus new additions. Each stage provides a `concepts.md` with the "why", a `schema.graphql` with the target SDL, `features/*.feature` with test specs, and `operations.graphql` with sample queries for manual exploration.
 
 ## Your Server Code
 
@@ -216,10 +216,43 @@ Your server should validate JWT tokens from the `Authorization: Bearer <token>` 
 │   └── orders/              # + seller assignment, orders + line items (stages 12+)
 ├── test-runner/             # Cucumber.js + TypeScript
 ├── mocks/                   # Mockoon configs for external APIs
-├── tools/                   # Schema linting, introspection helpers
-├── PLAN.md                  # Full curriculum design document
-└── DATA_DESIGN.md           # Database schema and design decisions
+└── tools/                   # Schema linting, introspection helpers
 ```
+
+## Design Decisions
+
+### Why E-Commerce
+
+After evaluating todo apps, blogs, social media, and library systems, a simplified marketplace wins because it naturally covers every GraphQL concept without contrived examples: object types (Products, Users, Orders), relationships of all cardinalities (User->Orders->LineItems, Products<->Categories), interfaces (`Node`, `Timestamped`), unions (`SearchResult`), enums (`OrderStatus`, `Role`), pagination (product catalog), auth (role-based access), subscriptions (order status changes), DataLoader (reviews for a list of products), and federation (subgraph splits).
+
+### Why SQLite
+
+SQLite is a file — zero infrastructure, no Docker, no connection strings, no server process. Every language has bindings. Students focus on GraphQL from day one, not database setup.
+
+### Why golang-migrate
+
+Language-agnostic standalone binary — no runtime dependency on Go, Node, or Java. Plain SQL up/down files with no DSL or ORM coupling. The `goto V` command maps perfectly to our staged curriculum. Alternatives like Flyway (Java dependency), dbmate (no `goto`), or Atlas (declarative complexity we don't need) were considered.
+
+### Why Mockoon for External API Mocks
+
+Mocks are JSON config files, not code in any language. Runs as a separate HTTP server — works regardless of the student's server language. Built-in response templating, latency simulation, and error responses. Alternatives like WireMock (Java), MSW/nock (Node-only), or DIY Express mocks all break the language-agnostic requirement or add maintenance burden.
+
+### Why Gherkin/Cucumber Tests
+
+The HTTP boundary is the language-agnostic testing contract. Step definitions send HTTP POST requests to `localhost:4000/graphql` and assert on JSON responses. The student never touches test files — they just implement until tests pass. A small, reusable step vocabulary covers all 16 stages without needing new step definitions.
+
+### Database Schema Conventions
+
+- **Money as INTEGER (cents):** Floats have rounding errors. Cents as integers are exact and match what Stripe uses. The `Money` custom scalar (stage 15) handles display formatting.
+- **Enums as TEXT + CHECK:** Postgres `CREATE TYPE ... AS ENUM` is painful to alter. TEXT + CHECK is easy to migrate, portable across databases, and still enforced at the DB level.
+- **UUIDs, not serial integers:** Work naturally as global IDs for `node(id: ID!)`, are safe to expose publicly (no enumeration), and work across federated subgraphs without collision.
+- **Timestamps from migration 1:** `created_at`/`updated_at` exist from the start even though the `Timestamped` interface isn't exposed until stage 07. Adding them retroactively via ALTER TABLE is messy.
+- **unit_price snapshot on line_items:** Captures the price at order time. Products change price; historical orders should not retroactively change totals.
+- **Hard deletes, no soft delete:** `ON DELETE CASCADE` where appropriate. This is a training project — simplicity wins.
+
+### Seed Data: Layered Tiers
+
+Seed data uses additive tiers (`base/` → `full/` → `orders/`) instead of monolithic files. Each tier adds data without duplicating anything from previous tiers. The `orders/` tier uses `UPDATE` for seller assignment since the column is added by a later migration after products already exist. See [seed-data/](seed-data/) for the full structure.
 
 ## Supported Frameworks
 
