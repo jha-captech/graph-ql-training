@@ -76,7 +76,7 @@ You'll add two new types to your schema and implement resolvers for:
 5. **Computed field:** `Product.averageRating` (average of all review ratings)
 6. **Mutation:** `createReview(input: CreateReviewInput!)` (create a new review)
 
-Your database now has `users` and `reviews` tables. The seed data (`full.sql`) includes multiple users with different roles and 100+ reviews across 50+ products, giving you realistic data to query.
+Your database now has `users` and `reviews` tables. The seed data (full tier) includes multiple users with different roles and 100+ reviews across 50+ products, giving you realistic data to query.
 
 ## Testing Approach
 

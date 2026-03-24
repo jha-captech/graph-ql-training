@@ -73,13 +73,13 @@ tasks:
             16) echo 11 ;;
             *) echo "unknown" ;;
           esac
-      SEED_FILE:
+      SEED_TIER:
         sh: |
           case "{{.STAGE}}" in
             01) echo "none" ;;
-            02|03|04|05) echo "base.sql" ;;
-            06|07|08|09|10|11) echo "full.sql" ;;
-            12|13|14|15|16) echo "full_with_orders.sql" ;;
+            02|03|04|05) echo "base" ;;
+            06|07|08|09|10|11) echo "full" ;;
+            12|13|14|15|16) echo "orders" ;;
             *) echo "unknown" ;;
           esac
     cmds:
@@ -91,11 +91,17 @@ tasks:
         rm -f {{.DB_FILE}}
         if [ "{{.STAGE_MAP}}" != "0" ]; then
           migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" goto {{.STAGE_MAP}}
-          if [ "{{.SEED_FILE}}" != "none" ]; then
-            sqlite3 {{.DB_FILE}} < {{.SEED_DIR}}/{{.SEED_FILE}}
+          if [ "{{.SEED_TIER}}" != "none" ]; then
+            for f in {{.SEED_DIR}}/base/*.sql; do sqlite3 {{.DB_FILE}} < "$f"; done
+            if [ "{{.SEED_TIER}}" = "full" ] || [ "{{.SEED_TIER}}" = "orders" ]; then
+              for f in {{.SEED_DIR}}/full/*.sql; do sqlite3 {{.DB_FILE}} < "$f"; done
+            fi
+            if [ "{{.SEED_TIER}}" = "orders" ]; then
+              for f in {{.SEED_DIR}}/orders/*.sql; do sqlite3 {{.DB_FILE}} < "$f"; done
+            fi
           fi
         fi
-        echo "DB reset for stage {{.STAGE}} (migration v{{.STAGE_MAP}}, seed: {{.SEED_FILE}})"
+        echo "DB reset for stage {{.STAGE}} (migration v{{.STAGE_MAP}}, seed tier: {{.SEED_TIER}})"
 
   mocks:start:
     desc: Start all mock external services

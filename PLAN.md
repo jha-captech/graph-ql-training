@@ -104,10 +104,10 @@ These entities are introduced gradually across stages -- not all at once.
 │   ├── 000001_create_products.up.sql
 │   ├── 000001_create_products.down.sql
 │   ├── ...
-├── seed-data/                       # Cumulative SQL seed data (shared across stages)
-│   ├── base.sql                     # Products + categories (stages 02-05)
-│   ├── full.sql                     # Above + users + reviews, scaled up (stages 06+)
-│   └── orders.sql                   # Additive: orders + line_items (stage 12+)
+├── seed-data/                       # Layered SQL seed data (additive tiers)
+│   ├── base/                        # Products + categories (stages 02-05)
+│   ├── full/                        # + users + reviews, scaled up (stages 06+)
+│   └── orders/                      # + seller assignment, orders + line_items (stage 12+)
 ├── test-runner/                     # Cucumber step definitions (one language)
 │   ├── package.json                 # or pyproject.toml, go.mod, etc.
 │   ├── steps/
@@ -261,13 +261,13 @@ tasks:
             16) echo 11 ;;
             *) echo "unknown" ;;
           esac
-      SEED_FILE:
+      SEED_TIER:
         sh: |
           case "{{.STAGE}}" in
             01) echo "none" ;;
-            02|03|04|05) echo "base.sql" ;;
-            06|07|08|09|10|11) echo "full.sql" ;;
-            12|13|14|15|16) echo "full_with_orders.sql" ;;
+            02|03|04|05) echo "base" ;;
+            06|07|08|09|10|11) echo "full" ;;
+            12|13|14|15|16) echo "orders" ;;
             *) echo "unknown" ;;
           esac
     cmds:
@@ -540,28 +540,28 @@ Feature: Product-Category Relationships
 
 ### Seed Data Strategy
 
-Seed data is **cumulative SQL files**, not per-stage. Three files in `seed-data/` grow with the curriculum:
+Seed data uses **layered SQL directories** in `seed-data/`. Each tier is additive — later tiers build on earlier ones without duplicating data:
 
-| File                   | Contents                                                                                | Used by stages | Records      |
-| ---------------------- | --------------------------------------------------------------------------------------- | -------------- | ------------ |
-| `base.sql`             | Products (5-10), categories (3-5), product-category links                               | 02-05          | ~20 records  |
-| `full.sql`             | Everything in base + users (5-10, mixed roles) + reviews (100+), scaled to 50+ products | 06-11          | ~200 records |
-| `full_with_orders.sql` | Everything in full + orders (10+) + line_items (30+)                                    | 12+            | ~240 records |
+| Tier     | Directory           | Contents                                                      | Used by stages | Records      |
+| -------- | ------------------- | ------------------------------------------------------------- | -------------- | ------------ |
+| `base`   | `seed-data/base/`   | Categories (4), products (8), product-category links          | 02-05          | ~20 records  |
+| `full`   | `seed-data/full/`   | + Gaming category, 42 more products, users (8), reviews (120) | 06-11          | ~200 records |
+| `orders` | `seed-data/orders/` | + seller assignment, orders (10), line items (30)             | 12+            | ~240 records |
 
-**Why cumulative:** Most stages add zero new data -- they build new GraphQL features on top of existing data. Maintaining 16 copies of growing seed data would be a nightmare.
+Loading is cumulative: `base` loads `base/*`, `full` loads `base/* + full/*`, `orders` loads `base/* + full/* + orders/*`. Each file within a tier is numbered for correct ordering (e.g. `01-categories.sql`, `02-products.sql`). No data is duplicated across files.
 
-**Why SQL (not JSON):** The database exists from stage 02. SQL seed files are loaded directly via `sqlite3 $DB_FILE < seed-data/base.sql`. No custom endpoint needed, no `POST /seed` handler for students to build, no JSON-to-SQL mapping code. Students focus on GraphQL, not data-loading plumbing.
+**Why SQL (not JSON):** The database exists from stage 02. SQL seed files are loaded directly via `sqlite3`. No custom endpoint needed, no `POST /seed` handler for students to build, no JSON-to-SQL mapping code. Students focus on GraphQL, not data-loading plumbing.
 
-**How it works:** The `task db:reset STAGE=XX` command handles everything — deletes the SQLite file, runs migrations to the correct version, and loads the right seed file. The test runner calls this before running tests (or students run it manually).
+**How it works:** The `task db:reset STAGE=XX` command handles everything — deletes the SQLite file, runs migrations to the correct version, and loads the right seed tier.
 
 ```bash
-# Reset for stage 03 — creates DB, migrates to v3, loads base.sql
+# Reset for stage 03 — creates DB, migrates to v3, loads base tier
 task db:reset STAGE=03
 
-# Reset for stage 08 — migrates to v5, loads full.sql
+# Reset for stage 08 — migrates to v5, loads base + full tiers
 task db:reset STAGE=08
 
-# Reset for stage 12 — migrates to v10, loads full_with_orders.sql
+# Reset for stage 12 — migrates to v10, loads base + full + orders tiers
 task db:reset STAGE=12
 ```
 
@@ -605,7 +605,7 @@ type Query {
 
 **Concepts:** The five built-in scalars. Object types. Non-null (`!`) and list (`[]`) modifiers. Enums. Field arguments. Connecting to SQLite.
 
-**Data:** `seed-data/base.sql` — 5-10 products loaded into SQLite via `task db:reset STAGE=02`.
+**Data:** `seed-data/base/` — 5-10 products loaded into SQLite via `task db:reset STAGE=02`.
 
 **Why SQLite from the start:** SQLite is a file — zero infrastructure. Every language has bindings. Students set up their database connection once and build on it for the rest of the curriculum. No throwaway in-memory code, no "migrate to a real DB" busywork later.
 
@@ -662,7 +662,7 @@ enum ProductStatus {
 
 **Concepts:** Object types referencing other object types. The parent/root argument in resolvers. 1:N and M:N relationships. Nested query resolution.
 
-**Data:** Same `seed-data/base.sql` — includes categories + product-category links.
+**Data:** Same `seed-data/base/` — includes categories + product-category links.
 
 **New schema additions:**
 
@@ -708,7 +708,7 @@ type Category {
 
 **Concepts:** Mutations vs queries. Input types. Why mutations have dedicated input/payload types. Serial execution of top-level mutation fields.
 
-**Data:** Same `seed-data/base.sql`. Mutations modify this data.
+**Data:** Same `seed-data/base/`. Mutations modify this data.
 
 **New schema additions:**
 
@@ -793,7 +793,7 @@ type UpdateProductPayload {
 
 **Concepts:** Adding multiple related types at once. N:1 relationships (review -> author, review -> product). Expanding the data model with real purpose.
 
-**Data:** Switch to `seed-data/full.sql` — scales up to 50+ products, adds 5-10 users (mixed roles), 100+ reviews.
+**Data:** Switch to `seed-data/full/` — scales up to 50+ products, adds 5-10 users (mixed roles), 100+ reviews.
 
 **Why these two together:** Users without reviews are inert (nothing references them). Reviews without users have no author. Introducing them together means both types are immediately useful: `Product.reviews`, `Review.author`, `User.reviews` are all queryable from day one.
 
@@ -870,7 +870,7 @@ type CreateReviewPayload {
 
 **Concepts:** Abstract types. Polymorphism in GraphQL. `__typename`. Inline fragments for type narrowing.
 
-**Data:** Same `seed-data/full.sql`. No new data -- this is a schema/resolver concept stage.
+**Data:** Same `seed-data/full/`. No new data -- this is a schema/resolver concept stage.
 
 **Why now (not earlier):** We now have 4 entity types (Product, Category, User, Review) which makes interfaces and unions meaningful. `SearchResult = Product | Category | User` returns genuinely different types. The `Node` interface applies to all entities. Previously with only Product + Category, the examples would have been thin.
 
@@ -923,7 +923,7 @@ type Query {
 
 **Concepts:** What N+1 is. Why it appears naturally in GraphQL. The DataLoader pattern (batching + per-request memoization).
 
-**Data:** Same `seed-data/full.sql`. The 50+ products and 100+ reviews are specifically sized to make N+1 visible.
+**Data:** Same `seed-data/full/`. The 50+ products and 100+ reviews are specifically sized to make N+1 visible.
 
 **No schema changes.** This stage adds a performance optimization layer.
 
@@ -968,7 +968,7 @@ Scenario: Products with reviews resolves efficiently
 
 **Concepts:** Why offset pagination breaks. Cursor-based pagination. The Relay Connection specification (Connections, Edges, Nodes, PageInfo).
 
-**Data:** Same `seed-data/full.sql`. 50+ products make pagination meaningful.
+**Data:** Same `seed-data/full/`. 50+ products make pagination meaningful.
 
 **New schema additions:**
 
@@ -1037,7 +1037,7 @@ type PageInfo {
 
 **Concepts:** GraphQL's partial success model. The `errors` array. Error extensions. Null propagation for non-null fields. Union-based errors as an alternative pattern.
 
-**Data:** Same `seed-data/full.sql`.
+**Data:** Same `seed-data/full/`.
 
 **New schema additions:**
 
@@ -1084,7 +1084,7 @@ type ValidationError {
 
 **Concepts:** Auth at the HTTP layer. Context-based auth. Field-level authorization. The business logic layer as the single source of truth for auth rules.
 
-**Data:** Same `seed-data/full.sql`. Users already have roles from stage 06. No new data -- this stage adds access control logic on top of existing data.
+**Data:** Same `seed-data/full/`. Users already have roles from stage 06. No new data -- this stage adds access control logic on top of existing data.
 
 **New schema additions:**
 
@@ -1137,7 +1137,7 @@ type Query {
 
 **Concepts:** Multi-entity mutations. Transactional consistency. Computed fields. Snapshot data (unit_price at order time).
 
-**Data:** Load `seed-data/full_with_orders.sql` which includes everything from full.sql plus orders with line items for existing users/products. Also adds `seller_id` to products.
+**Data:** The orders seed tier adds seller assignment, orders, and line items on top of the full tier. Also adds `seller_id` to products.
 
 **New DB tables:** `orders`, `line_items`. **Modified:** `products` (add `seller_id`).
 
@@ -1413,11 +1413,11 @@ type Product @key(fields: "id") {
 | Stage | New Types                              | New Fields                                                        | Key Concepts                                 | Data Change       |
 | ----- | -------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------- | ----------------- |
 | 01    | Query                                  | hello                                                             | SDL basics, HTTP endpoint                    | None              |
-| 02    | Product, ProductStatus                 | product, products                                                 | Scalars, enums, nullability, SQLite          | base.sql          |
+| 02    | Product, ProductStatus                 | product, products                                                 | Scalars, enums, nullability, SQLite          | base tier         |
 | 03    | Category                               | categories, Product.categories                                    | Relationships, resolver chaining             | Same              |
 | 04    | Mutation, *Input, *Payload             | createProduct, updateProduct                                      | Mutations, input types                       | Same              |
 | 05    | (none)                                 | (none)                                                            | Variables, fragments, aliases, directives    | Same              |
-| 06    | User, Review                           | user, users, Product.reviews, Product.averageRating, createReview | New entity types, N:1 relationships          | full.sql (scaled) |
+| 06    | User, Review                           | user, users, Product.reviews, Product.averageRating, createReview | New entity types, N:1 relationships          | full tier         |
 | 07    | Node, Timestamped, SearchResult        | node, search                                                      | Interfaces, unions, global IDs               | Same              |
 | 08    | (none -- optimization)                 | (none)                                                            | DataLoader, N+1                              | Same              |
 | 09    | *Connection, *Edge, PageInfo           | productsConnection                                                | Cursor pagination, filtering                 | Same              |

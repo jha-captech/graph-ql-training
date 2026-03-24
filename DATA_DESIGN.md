@@ -263,11 +263,11 @@ SQLite is a file — zero infrastructure, no Docker, no server process. Every la
 
 ## Stage-to-Table Introduction Map
 
-| Stage | Tables Introduced                        | Tables Modified               | Seed Data                        |
-| ----- | ---------------------------------------- | ----------------------------- | -------------------------------- |
-| 01    | (no database)                            |                               | None                             |
-| 02-05 | products, categories, product_categories |                               | base.sql                         |
-| 06    | users, reviews                           |                               | full.sql (scaled)                |
-| 09    |                                          | products (pagination indexes) | Same                             |
-| 12    | orders, line_items                       | products (add seller_id)      | + orders in full_with_orders.sql |
-| 15    | pricing                                  |                               | + pricing records                |
+| Stage | Tables Introduced                        | Tables Modified               | Seed Data                  |
+| ----- | ---------------------------------------- | ----------------------------- | -------------------------- |
+| 01    | (no database)                            |                               | None                       |
+| 02-05 | products, categories, product_categories |                               | base tier                  |
+| 06    | users, reviews                           |                               | full tier (adds to base)   |
+| 09    |                                          | products (pagination indexes) | Same                       |
+| 12    | orders, line_items                       | products (add seller_id)      | orders tier (adds to full) |
+| 15    | pricing                                  |                               | + pricing records          |

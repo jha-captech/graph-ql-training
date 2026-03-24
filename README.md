@@ -131,24 +131,24 @@ Your server should read from these variables rather than hardcoding values. The 
 
 ## Stage Overview
 
-| Stage | Topic                      | Database        | Seed Data              |
-| ----- | -------------------------- | --------------- | ---------------------- |
-| 01    | Hello GraphQL              | None            | None                   |
-| 02    | Types & Enums              | Migrations 1-3  | `base.sql`             |
-| 03    | Relationships              | Migrations 1-3  | `base.sql`             |
-| 04    | Mutations                  | Migrations 1-3  | `base.sql`             |
-| 05    | Query Language             | Migrations 1-3  | `base.sql`             |
-| 06    | Users & Reviews            | Migrations 1-5  | `full.sql`             |
-| 07    | Interfaces & Unions        | Migrations 1-5  | `full.sql`             |
-| 08    | DataLoader                 | Migrations 1-5  | `full.sql`             |
-| 09    | Pagination                 | Migrations 1-6  | `full.sql`             |
-| 10    | Error Handling             | Migrations 1-6  | `full.sql`             |
-| 11    | Authentication             | Migrations 1-6  | `full.sql`             |
-| 12    | Orders                     | Migrations 1-10 | `full_with_orders.sql` |
-| 13    | Subscriptions              | Migrations 1-10 | `full_with_orders.sql` |
-| 14    | Remote Data Sources        | Migrations 1-10 | `full_with_orders.sql` |
-| 15    | Custom Scalars & Evolution | Migrations 1-11 | `full_with_orders.sql` |
-| 16    | Security & Federation      | Migrations 1-11 | `full_with_orders.sql` |
+| Stage | Topic                      | Database        | Seed Tier |
+| ----- | -------------------------- | --------------- | --------- |
+| 01    | Hello GraphQL              | None            | None      |
+| 02    | Types & Enums              | Migrations 1-3  | `base`    |
+| 03    | Relationships              | Migrations 1-3  | `base`    |
+| 04    | Mutations                  | Migrations 1-3  | `base`    |
+| 05    | Query Language             | Migrations 1-3  | `base`    |
+| 06    | Users & Reviews            | Migrations 1-5  | `full`    |
+| 07    | Interfaces & Unions        | Migrations 1-5  | `full`    |
+| 08    | DataLoader                 | Migrations 1-5  | `full`    |
+| 09    | Pagination                 | Migrations 1-6  | `full`    |
+| 10    | Error Handling             | Migrations 1-6  | `full`    |
+| 11    | Authentication             | Migrations 1-6  | `full`    |
+| 12    | Orders                     | Migrations 1-10 | `orders`  |
+| 13    | Subscriptions              | Migrations 1-10 | `orders`  |
+| 14    | Remote Data Sources        | Migrations 1-10 | `orders`  |
+| 15    | Custom Scalars & Evolution | Migrations 1-11 | `orders`  |
+| 16    | Security & Federation      | Migrations 1-11 | `orders`  |
 
 ## Task Commands
 
@@ -210,10 +210,10 @@ Your server should validate JWT tokens from the `Authorization: Bearer <token>` 
 │       ├── operations.graphql # Sample queries for exploration
 │       └── features/        # Gherkin test specs
 ├── migrations/              # Sequential SQL migrations (all stages)
-├── seed-data/               # SQL seed data files
-│   ├── base.sql             # Products + categories (stages 02-05)
-│   ├── full.sql             # + users + reviews (stages 06-11)
-│   └── full_with_orders.sql # + orders + line items (stages 12+)
+├── seed-data/               # Layered SQL seed data (additive tiers)
+│   ├── base/                # Products + categories (stages 02-05)
+│   ├── full/                # + users + reviews (stages 06-11)
+│   └── orders/              # + seller assignment, orders + line items (stages 12+)
 ├── test-runner/             # Cucumber.js + TypeScript
 ├── mocks/                   # Mockoon configs for external APIs
 ├── tools/                   # Schema linting, introspection helpers
