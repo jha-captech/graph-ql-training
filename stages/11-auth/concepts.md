@@ -158,7 +158,40 @@ Most modern GraphQL APIs use JWTs (JSON Web Tokens):
 3. Client includes JWT in `Authorization: Bearer <token>` header
 4. Server verifies signature and extracts user identity
 
-For this stage, the test runner uses a shared secret to sign/verify tokens. In production, use asymmetric keys (RS256) or a dedicated auth service.
+For this stage, the test runner signs JWTs with a shared secret. Your server must verify tokens using the same secret and extract the user identity from the payload.
+
+**JWT configuration:**
+- **Secret**: Read from the `JWT_SECRET` environment variable (default: `graphql-training-secret`)
+- **Algorithm**: HS256 (HMAC-SHA256)
+
+**Token payload structure:**
+
+```json
+{
+  "sub": "user-001",
+  "email": "alice@example.com",
+  "name": "Alice Johnson",
+  "role": "CUSTOMER",
+  "iat": 1700000000,
+  "exp": 1700003600
+}
+```
+
+The test runner generates tokens for three pre-seeded users:
+
+| Role | `sub` | `email` | `name` |
+|------|-------|---------|--------|
+| CUSTOMER | user-001 | alice@example.com | Alice Johnson |
+| SELLER | user-003 | carol@example.com | Carol Williams |
+| ADMIN | user-005 | eve@example.com | Eve Davis |
+
+Your authentication middleware should:
+1. Extract the token from the `Authorization: Bearer <token>` header
+2. Verify the signature using `JWT_SECRET`
+3. Decode the payload and populate `context.user` with `{ id: sub, email, name, role }`
+4. Set `context.user = null` if no token is present or verification fails (don't throw — let resolvers decide)
+
+In production, use asymmetric keys (RS256) or a dedicated auth service.
 
 ### Field-Level Authorization
 

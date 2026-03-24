@@ -256,6 +256,27 @@ Your resolver should call `http://localhost:4010/estimate`. The test runner will
 - [Mockoon Documentation](https://mockoon.com/docs/latest/about/)
 - [Partial Success in GraphQL](https://spec.graphql.org/October2021/#sec-Errors)
 
+## What You're Building
+
+A server that:
+1. Adds a `ShippingEstimate` type with fields: `provider` (String!), `days` (Int!), `cost` (Float!)
+2. Adds a `shippingEstimate(zipCode: String!)` field on the `Product` type — this field is **nullable** (returns `null` on API failure)
+3. Implements a resolver for `Product.shippingEstimate` that:
+   - Makes an HTTP GET request to the shipping mock API: `${SHIPPING_API_URL}/estimate?zip={zipCode}`
+   - Returns the parsed response on success
+   - Returns `null` on any failure (network error, timeout, non-200 status)
+4. Reads the shipping API base URL from the `SHIPPING_API_URL` environment variable (defaults to `http://localhost:4010`)
+5. Sets a reasonable timeout on the HTTP client (2-5 seconds)
+6. Handles graceful degradation — the rest of the product data resolves even when the shipping API is down
+
+Start the mock APIs before running tests:
+
+```bash
+task mocks:start
+```
+
+The test suite will verify both successful API calls and graceful degradation when the API is unavailable.
+
 ## Common Pitfalls
 
 - **Not handling errors**: External API failure crashes your GraphQL server. Always wrap HTTP calls in try/catch.

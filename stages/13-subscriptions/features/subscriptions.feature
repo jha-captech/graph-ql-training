@@ -32,7 +32,7 @@ Feature: GraphQL Subscriptions
     Then the subscription should receive an event within 5 seconds
     Then the subscription event "data.orderStatusChanged.id" should equal "ord-001"
     Then the subscription event "data.orderStatusChanged.status" should equal "SHIPPED"
-    Then the subscription event "data.orderStatusChanged.buyer.name" should equal "Alice"
+    Then the subscription event "data.orderStatusChanged.buyer.name" should equal "Alice Johnson"
 
   Scenario: Subscription only receives events for the specified order
     Given I am authenticated as "CUSTOMER"
@@ -110,7 +110,7 @@ Feature: GraphQL Subscriptions
         createProduct(input: {
           title: "Subscription Test Product"
           description: "Created to test subscription"
-          price: 99.99
+          price: 9999
           categoryIds: ["cat-001"]
         }) {
           ... on CreateProductSuccess {
@@ -124,7 +124,7 @@ Feature: GraphQL Subscriptions
       """
     Then the subscription should receive an event within 5 seconds
     Then the subscription event "data.productCreated.title" should equal "Subscription Test Product"
-    Then the subscription event "data.productCreated.price" should equal 99.99
+    Then the subscription event "data.productCreated.price" should equal 9999
     Then the subscription event "data.productCreated.status" should equal "DRAFT"
 
   Scenario: Product creation subscription broadcasts to all subscribers
@@ -152,7 +152,7 @@ Feature: GraphQL Subscriptions
       mutation {
         createProduct(input: {
           title: "Broadcast Test Product"
-          price: 49.99
+          price: 4999
           categoryIds: ["cat-002"]
         }) {
           ... on CreateProductSuccess {
@@ -218,7 +218,7 @@ Feature: GraphQL Subscriptions
     Then the subscription should receive an event within 5 seconds
     Then the subscription event "data.orderStatusChanged.status" should equal "DELIVERED"
     Then the subscription event "data.orderStatusChanged.items" should be an array
-    Then the subscription event "data.orderStatusChanged.buyer.name" should equal "Alice"
+    Then the subscription event "data.orderStatusChanged.buyer.name" should equal "Alice Johnson"
 
   Scenario: Unauthenticated subscription is rejected
     Given I am not authenticated

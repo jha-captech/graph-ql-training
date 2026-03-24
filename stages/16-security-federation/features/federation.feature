@@ -118,7 +118,7 @@ Feature: GraphQL Federation
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    Then the response "data.order.buyer.name" should equal "Alice"
+    Then the response "data.order.buyer.name" should equal "Alice Johnson"
     Then the response "data.order.items" should be an array
     Then the response "data.order.items[0].product.title" should not be null
 
@@ -184,7 +184,7 @@ Feature: GraphQL Federation
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    Then the response "data.me.name" should equal "Alice"
+    Then the response "data.me.name" should equal "Alice Johnson"
     Then the response "data.me.orders" should be an array
 
   # ============================================================
@@ -389,7 +389,7 @@ Feature: GraphQL Federation
       mutation {
         createProduct(input: {
           title: "Federation Test Product"
-          price: 99.99
+          price: 9999
           categoryIds: ["cat-001"]
         }) {
           ... on CreateProductSuccess {

@@ -60,7 +60,7 @@ mutation CreateNewProduct {
   createProduct(input: {
     title: "New Wireless Headphones"
     description: "Premium noise-cancelling headphones"
-    price: 299.99
+    price: 29999
     categoryIds: ["cat-001"]
   }) {
     ... on CreateProductSuccess {

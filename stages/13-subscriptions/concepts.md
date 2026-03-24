@@ -182,6 +182,24 @@ Then the subscription event "data.orderStatusChanged.status" should equal "SHIPP
 - [Apollo Server Subscriptions Guide](https://www.apollographql.com/docs/apollo-server/data/subscriptions/)
 - [Scaling GraphQL Subscriptions](https://www.apollographql.com/blog/backend/scaling-graphql-subscriptions/)
 
+## What You're Building
+
+A server that:
+1. Adds a `Subscription` root type with two subscriptions:
+   - `orderStatusChanged(orderId: ID!): Order!` — filtered by order ID, only delivers events for the specified order
+   - `productCreated: Product!` — broadcast to all subscribers when any product is created
+2. Implements WebSocket support using the [graphql-ws](https://github.com/enisdenjo/graphql-ws) protocol (`graphql-transport-ws` subprotocol)
+3. Sets up an in-memory pub/sub system:
+   - `updateOrderStatus` mutation publishes to `orderStatusChanged` subscribers
+   - `createProduct` mutation publishes to `productCreated` subscribers
+4. Filters `orderStatusChanged` events so subscribers only receive events matching their `orderId` argument
+5. Broadcasts `productCreated` events to all connected subscribers
+6. Enforces authentication on subscriptions — unauthenticated users cannot subscribe
+7. Enforces authorization — customers can only subscribe to their own orders' status changes
+8. Resolves nested fields on subscription payloads (e.g., `Order.buyer`, `Order.items`, `Product.seller`)
+
+The WebSocket endpoint should be at the same URL as your GraphQL HTTP endpoint (`ws://localhost:4000/graphql`). The test runner connects via WebSocket, sends a subscription, triggers a mutation via HTTP, and asserts that the subscription receives the correct event.
+
 ## Common Pitfalls
 
 - **Forgetting to call `pubsub.publish()` in mutations**: Subscriptions won't fire if you don't publish events.

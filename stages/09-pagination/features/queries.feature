@@ -35,7 +35,7 @@ Feature: Stage 09 - Pagination Queries
     Then the response "data.productsConnection.pageInfo.hasPreviousPage" should equal "false"
     Then the response "data.productsConnection.pageInfo.startCursor" should not be null
     Then the response "data.productsConnection.pageInfo.endCursor" should not be null
-    Then the response "data.productsConnection.totalCount" should equal 49
+    Then the response "data.productsConnection.totalCount" should equal 50
 
   Scenario: Query products with forward pagination using after cursor
     When I send a GraphQL query:
@@ -75,13 +75,13 @@ Feature: Stage 09 - Pagination Queries
     Then the response should not contain "errors"
     Then the response "data.productsConnection.edges" should have 10 items
     Then the response "data.productsConnection.pageInfo.hasPreviousPage" should equal "true"
-    Then the response "data.productsConnection.totalCount" should equal 49
+    Then the response "data.productsConnection.totalCount" should equal 50
 
   Scenario: Paginate through all products without gaps or duplicates
     When I send a GraphQL query:
       """
       {
-        productsConnection(first: 20) {
+        productsConnection(first: 25) {
           edges {
             node {
               id
@@ -96,11 +96,11 @@ Feature: Stage 09 - Pagination Queries
       }
       """
     Then the response status should be 200
-    Then the response "data.productsConnection.edges" should have 20 items
+    Then the response "data.productsConnection.edges" should have 25 items
     When I send a GraphQL query:
       """
       {
-        productsConnection(first: 20, after: "${data.productsConnection.pageInfo.endCursor}") {
+        productsConnection(first: 25, after: "${data.productsConnection.pageInfo.endCursor}") {
           edges {
             node {
               id
@@ -113,7 +113,7 @@ Feature: Stage 09 - Pagination Queries
       }
       """
     Then the response status should be 200
-    Then the response "data.productsConnection.edges" should have 20 items
+    Then the response "data.productsConnection.edges" should have 25 items
     Then the response "data.productsConnection.pageInfo.hasNextPage" should equal "false"
 
   Scenario: Request more items than available
@@ -136,9 +136,9 @@ Feature: Stage 09 - Pagination Queries
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    Then the response "data.productsConnection.edges" should have 49 items
+    Then the response "data.productsConnection.edges" should have 50 items
     Then the response "data.productsConnection.pageInfo.hasNextPage" should equal "false"
-    Then the response "data.productsConnection.totalCount" should equal 49
+    Then the response "data.productsConnection.totalCount" should equal 50
 
   Scenario: Filter products by category with pagination
     When I send a GraphQL query:
@@ -352,7 +352,7 @@ Feature: Stage 09 - Pagination Queries
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    Then the response "data.all.totalCount" should equal 49
+    Then the response "data.all.totalCount" should equal 50
     Then the response "data.activeOnly.totalCount" should be greater than 0
     Then the response "data.draftOnly.totalCount" should equal 1
 

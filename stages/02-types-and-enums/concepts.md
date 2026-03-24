@@ -73,15 +73,47 @@ After completing this stage, you should be able to answer:
 - [GraphQL Scalars](https://graphql.org/learn/schema/#scalar-types) — The five built-in types
 - [Enums](https://graphql.org/learn/schema/#enumeration-types) — Finite value sets
 
+## Connecting to the Database
+
+Your server needs to connect to a SQLite database file. The file path is set by the `DB_FILE` environment variable (default: `graphql_training.db` in the project root). Run `task db:reset STAGE=02` to create and seed it.
+
+Pass the database connection through GraphQL's **context object** so all resolvers can access it:
+
+```typescript
+// TypeScript/JavaScript example
+import Database from 'better-sqlite3';
+const db = new Database(process.env.DB_FILE || 'graphql_training.db');
+
+// Pass db via context to all resolvers
+const server = new ApolloServer({
+  schema,
+  context: () => ({ db })
+});
+```
+
+```go
+// Go example
+db, _ := sql.Open("sqlite3", os.Getenv("DB_FILE"))
+```
+
+```python
+# Python example
+import sqlite3
+db = sqlite3.connect(os.environ.get("DB_FILE", "graphql_training.db"))
+```
+
+**Important**: Prices in the database are stored as **integers in cents** (e.g., `12999` = $129.99). The schema defines `price: Float!`, so your resolver returns the raw integer value. Don't convert to dollars — the test suite expects cent values.
+
 ## What You're Building
 
 A server that:
 1. Connects to a SQLite database (created and seeded via `task db:reset STAGE=02`)
-2. Defines a `Product` type with fields: `id`, `title`, `description`, `price`, `inStock`, `status`
-3. Defines a `ProductStatus` enum with values: `DRAFT`, `ACTIVE`, `ARCHIVED`
-4. Implements resolvers for:
+2. Reads the database path from the `DB_FILE` environment variable
+3. Defines a `Product` type with fields: `id`, `title`, `description`, `price`, `inStock`, `status`
+4. Defines a `ProductStatus` enum with values: `DRAFT`, `ACTIVE`, `ARCHIVED`
+5. Implements resolvers for:
    - `Query.products: [Product!]!` — returns all products from the database
    - `Query.product(id: ID!): Product` — returns a single product by ID, or null if not found
-5. Handles nullable fields correctly (e.g., `description` can be null, but `title` cannot)
+6. Handles nullable fields correctly (e.g., `description` can be null, but `title` cannot)
 
 The database is already set up with migrations and seed data. Your job is to read from it and expose it through GraphQL. This is the pattern you'll use for every stage: database → resolver → GraphQL response.

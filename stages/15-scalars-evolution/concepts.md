@@ -346,6 +346,26 @@ Old clients using `price` still work. New clients use `pricing` for structured d
 - [Schema Evolution Best Practices](https://graphql.org/learn/best-practices/#versioning)
 - [Deprecation in GraphQL](https://spec.graphql.org/October2021/#sec--deprecated)
 
+## What You're Building
+
+A server that:
+1. Defines three custom scalars:
+   - `DateTime` — serializes to/from ISO 8601 strings (e.g., `"2025-01-15T10:00:00.000Z"`)
+   - `EmailAddress` — validates email format on input, rejects malformed emails
+   - `Money` — represents monetary amounts (stored as integer cents internally, serialized as needed)
+2. Replaces `String!` timestamps with `DateTime!` on all `createdAt` and `updatedAt` fields
+3. Replaces `String!` email with `EmailAddress!` on `User.email`
+4. Adds a `Pricing` type (`amount: Money!`, `currency: String!`, `compareAtAmount: Money`) to `Product`
+5. Deprecates `Product.price` in favor of `Product.pricing`
+6. Defines two custom directives:
+   - `@auth(requires: Role!)` on `FIELD_DEFINITION` — declares which role is needed to access a field
+   - `@cacheControl(maxAge: Int!)` on `FIELD_DEFINITION | OBJECT` — declares cache TTL
+7. Implements the `@auth` directive so it enforces role-based access (e.g., `users: [User!]! @auth(requires: ADMIN)`)
+8. Populates `Pricing` data from the `pricing` database table (added by migration 11)
+9. Keeps deprecated fields functional — old queries using `price` still work
+
+The key evolution pattern: add new fields/types, deprecate old ones, but never break existing clients. The test suite verifies both the new typed fields and the deprecated fields still function.
+
 ## Common Pitfalls
 
 - **Floating-point money**: Storing prices as `Float` causes rounding errors. Use cents (integer) and convert at the boundary.
