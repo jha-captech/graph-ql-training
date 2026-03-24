@@ -6,13 +6,13 @@ A progressive, language-agnostic GraphQL curriculum. You receive schemas, Gherki
 
 Install these tools before starting:
 
-| Tool                                                        | Purpose             | Install                       |
-| ----------------------------------------------------------- | ------------------- | ----------------------------- |
-| [Node.js](https://nodejs.org/) 18+                          | Test runner         | `brew install node`           |
-| [SQLite](https://sqlite.org/) 3.35+                         | Database            | `brew install sqlite3`        |
-| [golang-migrate](https://github.com/golang-migrate/migrate) | Database migrations | `brew install golang-migrate` |
-| [go-task](https://taskfile.dev/)                            | Task runner         | `brew install go-task`        |
-| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+)         | External API mocks  | `npm install -g @mockoon/cli` |
+| Tool                                                        | Purpose             | Install                        |
+| ----------------------------------------------------------- | ------------------- | ------------------------------ |
+| [Bun](https://bun.sh/) 1.0+                                 | Test runner         | `brew install oven-sh/bun/bun` |
+| [SQLite](https://sqlite.org/) 3.35+                         | Database            | `brew install sqlite3`         |
+| [golang-migrate](https://github.com/golang-migrate/migrate) | Database migrations | `brew install golang-migrate`  |
+| [go-task](https://taskfile.dev/)                            | Task runner         | `brew install go-task`         |
+| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+)         | External API mocks  | `bun install -g @mockoon/cli`  |
 
 ## Quick Start
 
@@ -35,7 +35,7 @@ mkdir server && cd server
 # ... initialize your project (npm init, go mod init, etc.)
 
 # 6. Run your server at http://localhost:4000/graphql, then run the tests
-cd test-runner && npx cucumber-js --tags @stage:01
+cd test-runner && bunx cucumber-js --tags @stage:01
 ```
 
 ## Branching Strategy
@@ -90,7 +90,7 @@ cat stages/XX-name/operations.graphql
 # 5. Implement your server to match the schema
 
 # 6. Run the tests until they all pass
-cd test-runner && npx cucumber-js --tags @stage:XX
+cd test-runner && bunx cucumber-js --tags @stage:XX
 
 # 7. Commit your work and move to the next stage
 git add -A && git commit -m "stage XX complete"
@@ -112,7 +112,7 @@ graph-ql-training/
 └── ...
 ```
 
-This keeps your implementation cleanly separated from the curriculum files. Initialize it with whatever framework you choose — `npm init`, `go mod init`, `dotnet new web`, etc. Your server must listen on `http://localhost:4000/graphql` (configurable via `.env`).
+This keeps your implementation cleanly separated from the curriculum files. Initialize it with whatever framework you choose — `bun init`, `go mod init`, `dotnet new web`, etc. Your server must listen on `http://localhost:4000/graphql` (configurable via `.env`).
 
 ## Environment Variables
 
@@ -179,13 +179,13 @@ Tests are Cucumber.js feature files that send HTTP requests to your running Grap
 cd test-runner
 
 # Run tests for a specific stage
-npx cucumber-js --tags @stage:02
+bunx cucumber-js --tags @stage:02
 
 # Run all tests up to a stage
-npx cucumber-js --tags "@stage:01 or @stage:02 or @stage:03"
+bunx cucumber-js --tags "@stage:01 or @stage:02 or @stage:03"
 
 # Dry run (check feature files parse without executing)
-npx cucumber-js --dry-run --tags @stage:02
+bunx cucumber-js --dry-run --tags @stage:02
 ```
 
 ### Authentication (Stages 11+)
@@ -227,7 +227,7 @@ This curriculum works with any GraphQL server implementation. Some popular choic
 
 | Language   | Framework                   | Getting Started                  |
 | ---------- | --------------------------- | -------------------------------- |
-| TypeScript | Apollo Server, graphql-yoga | `npm init`                       |
+| TypeScript | Apollo Server, graphql-yoga | `bun init`                       |
 | Go         | gqlgen                      | `go mod init`                    |
 | Python     | Strawberry, Ariadne         | `pip install strawberry-graphql` |
 | .NET       | Hot Chocolate               | `dotnet new web`                 |

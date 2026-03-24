@@ -20,18 +20,18 @@ errors=0
 # --- Check prerequisites ---
 info "Checking prerequisites"
 
-# Node.js 18+
-if command -v node &>/dev/null; then
-  node_version=$(node -v | sed 's/v//')
-  node_major=$(echo "$node_version" | cut -d. -f1)
-  if [ "$node_major" -ge 18 ]; then
-    ok "Node.js $node_version"
+# Bun 1.0+
+if command -v bun &>/dev/null; then
+  bun_version=$(bun --version)
+  bun_major=$(echo "$bun_version" | cut -d. -f1)
+  if [ "$bun_major" -ge 1 ]; then
+    ok "Bun $bun_version"
   else
-    fail "Node.js $node_version found — need 18+ (brew install node)"
+    fail "Bun $bun_version found — need 1.0+ (brew install oven-sh/bun/bun)"
     errors=$((errors + 1))
   fi
 else
-  fail "Node.js not found (brew install node)"
+  fail "Bun not found (brew install oven-sh/bun/bun)"
   errors=$((errors + 1))
 fi
 
@@ -64,7 +64,7 @@ fi
 if command -v mockoon-cli &>/dev/null; then
   ok "Mockoon CLI"
 else
-  warn "Mockoon CLI not found — only needed for stage 14+ (npm install -g @mockoon/cli)"
+  warn "Mockoon CLI not found — only needed for stage 14+ (bun install -g @mockoon/cli)"
 fi
 
 if [ "$errors" -gt 0 ]; then
@@ -92,9 +92,9 @@ info "Installing test runner dependencies"
 
 cd test-runner
 if [ -d node_modules ]; then
-  ok "test-runner/node_modules already exists — running npm install to update"
+  ok "test-runner/node_modules already exists — running bun install to update"
 fi
-npm install --no-fund --no-audit 2>&1 | tail -1
+bun install 2>&1 | tail -1
 ok "Test runner dependencies installed"
 cd ..
 
@@ -117,6 +117,6 @@ echo "  1. Create a stage branch:   git checkout -b stage/01"
 echo "  2. Read the concepts:       cat stages/01-hello-graphql/concepts.md"
 echo "  3. Set up your server in:   server/ (any language/framework)"
 echo "  4. Serve GraphQL at:        http://localhost:4000/graphql"
-echo "  5. Run tests:               cd test-runner && npx cucumber-js --tags @stage:01"
+echo "  5. Run tests:               cd test-runner && bunx cucumber-js --tags @stage:01"
 echo ""
 echo "See README.md for the full workflow and branching strategy."
