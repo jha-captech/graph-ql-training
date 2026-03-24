@@ -9,6 +9,7 @@ This stage introduces object-to-object relationships in GraphQL: how one type re
 **GraphQL is named after graphs for a reason.** In REST, relationships require multiple endpoints or embedded data that may or may not be what the client needs. In GraphQL, relationships are first-class: a field's type can be another object, and the query determines how deeply to traverse. A client can ask for `products { title }` or `products { categories { name } }` or even `products { categories { products { title } } }`—it's the same schema, just different queries.
 
 Understanding the parent argument is crucial. When you query `product(id: "123") { categories { name } }`, GraphQL:
+
 1. Calls `Query.product` resolver with `args.id = "123"`, returns a product object
 2. For each `Product.categories` field requested, calls the `Product.categories` resolver with the **parent product object** as the first argument
 3. That resolver knows which product it's resolving for, and can look up that product's categories
@@ -28,6 +29,7 @@ This resolver chaining is how GraphQL builds the response tree. Each resolver is
 After completing this stage, you should be able to answer:
 
 1. **What are the four arguments every resolver receives, and what is each used for?**
+
    - `parent`/`root`: The result from the parent field's resolver
    - `args`: Arguments passed to this field in the query
    - `context`: Shared state (DB connection, auth, etc.)
@@ -46,30 +48,35 @@ After completing this stage, you should be able to answer:
 ## Implementation Notes by Framework
 
 **graphql-js (TypeScript/JavaScript)**:
+
 - Resolvers are functions in a resolver map or passed to the schema
 - The parent argument is typically called `parent` or `source`
 - For `Product.categories`, add: `Product: { categories: (parent, args, context) => fetchCategoriesForProduct(parent.id, context.db) }`
 - Default behavior: if no resolver is provided, GraphQL returns the property with the same name from parent
 
 **gqlgen (Go)**:
+
 - Field resolvers are methods: `func (r *productResolver) Categories(ctx context.Context, obj *model.Product) ([]*model.Category, error)`
 - `obj` is the parent product; `ctx` contains context including DB
 - Use dataloaders pattern: `r.CategoryLoader.LoadMany(ctx, obj.CategoryIDs)`
 - Join tables: query the join table in your resolver
 
 **Hot Chocolate (.NET)**:
+
 - Resolvers can be methods on the parent type or separate resolver classes
 - Use `[Parent]` attribute to receive the parent object explicitly
 - For many-to-many: query the join table or use EF Core navigation properties
 - Example: `public async Task<List<Category>> GetCategories([Parent] Product product, [Service] IDbContextFactory factory)`
 
 **Strawberry (Python)**:
+
 - Define resolver methods on your type class: `@strawberry.field`
 - First param is `self` (the parent object), then `info: strawberry.types.Info`
 - Access context via `info.context`
 - For many-to-many: query join table in resolver or use SQLAlchemy relationships
 
 **graphql-java (Java)**:
+
 - Field resolvers are `DataFetcher` implementations
 - The parent is in `DataFetchingEnvironment.getSource()`
 - Example: `DataFetcher<List<Category>> categoriesResolver = env -> fetchCategories(env.getSource().getId())`
@@ -85,6 +92,7 @@ After completing this stage, you should be able to answer:
 ## What You're Building
 
 A server that:
+
 1. Adds a `Category` type with fields: `id`, `name`, `products`
 2. Adds `categories: [Category!]!` to the `Product` type
 3. Adds `category(id: ID!)` and `categories: [Category!]!` to the root `Query`

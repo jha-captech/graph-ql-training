@@ -20,7 +20,7 @@ While the server schema remains unchanged from Stage 04, your resolver implement
 
 **Variables as Prepared Statements:** Think of GraphQL variables like parameterized SQL queries. The query structure is fixed; only the input values change. The server parses the query once, validates the variable types, then executes with the provided values.
 
-**Aliases as Response Shape Control:** The schema defines what *can* be queried; aliases let clients define what the response *looks like*. If you need two products in one query, you can't ask for `product` twice—but you can alias them: `first: product(id: "1")` and `second: product(id: "2")`.
+**Aliases as Response Shape Control:** The schema defines what _can_ be queried; aliases let clients define what the response _looks like_. If you need two products in one query, you can't ask for `product` twice—but you can alias them: `first: product(id: "1")` and `second: product(id: "2")`.
 
 **Fragments as Field Templates:** Fragments are similar to functions in programming—define once, invoke many times. When multiple queries need the same 15 product fields, extract them into a `ProductFields` fragment. Change the fragment, and all queries using it are updated.
 
@@ -37,18 +37,23 @@ While the server schema remains unchanged from Stage 04, your resolver implement
 ## Implementation Notes
 
 ### graphql-js (JavaScript/TypeScript)
+
 Variables are passed as the second argument to `execute()` or `graphql()`. Aliases and fragments are handled automatically by the execution engine—no resolver changes needed. Directives `@include` and `@skip` are built-in; custom directives require registering them in the schema and implementing resolution logic.
 
 ### gqlgen (Go)
+
 Variables map to resolver argument structs. Fragments and aliases are handled by the generated code. `@include`/`@skip` work out of the box. For custom directives, use the `directive` configuration in `gqlgen.yml` to point to Go functions.
 
 ### Hot Chocolate (.NET)
+
 Variables are automatically bound to resolver parameters. Fragments and aliases require no special handling. Built-in directives work automatically. Custom directives are classes implementing `DirectiveType` and registered in the schema builder.
 
 ### Strawberry (Python)
+
 Variables are passed to the `execute` function. Aliases and fragments are handled by the execution layer. Directives `@include`/`@skip` are built-in. Custom directives use the `@strawberry.directive` decorator.
 
 ### graphql-java (Java)
+
 Variables are provided via `ExecutionInput.Builder.variables()`. Fragments and aliases are part of the query parsing and execution—no resolver changes needed. Built-in directives work automatically; custom directives implement `SchemaDirectiveWiring`.
 
 ## Official GraphQL Documentation
@@ -69,4 +74,4 @@ You're not adding new resolvers or schema types. Instead, you're verifying that 
 3. Resolves both named and inline fragments
 4. Conditionally includes/excludes fields based on directives
 
-This stage tests the *execution engine*, not your domain logic.
+This stage tests the _execution engine_, not your domain logic.

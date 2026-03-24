@@ -22,12 +22,14 @@ GraphQL's flexible nature makes auth more nuanced than REST. A single query can 
 ### Authentication vs. Authorization
 
 **Authentication (AuthN)**: "Who are you?"
+
 - Happens at the **HTTP layer** before GraphQL execution
 - Validates tokens, sessions, API keys
 - Extracts user identity and adds it to GraphQL context
 - Unauthenticated requests are valid—they just have `context.user = null`
 
 **Authorization (AuthZ)**: "What are you allowed to do?"
+
 - Happens in **business logic** during GraphQL execution
 - Checks roles, permissions, resource ownership
 - Can be entity-level ("can you see any orders?") or field-level ("can you see this user's email?")
@@ -39,17 +41,17 @@ GraphQL's `context` is a per-request object available to all resolvers. It's the
 
 ```typescript
 type Context = {
-  user: User | null;           // Authenticated user, or null
-  db: Database;                // Database connection
-  dataloaders: DataLoaders;    // DataLoader instances
-}
+  user: User | null; // Authenticated user, or null
+  db: Database; // Database connection
+  dataloaders: DataLoaders; // DataLoader instances
+};
 ```
 
 Your authentication middleware populates `context.user`:
 
 ```typescript
-app.use('/graphql', async (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+app.use("/graphql", async (req, res, next) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
   const user = token ? await verifyToken(token) : null;
   req.context = { user, db, dataloaders };
   next();
@@ -61,55 +63,58 @@ Resolvers then check `context.user`:
 ```typescript
 const Query = {
   me: (parent, args, context) => {
-    return context.user;  // null if not authenticated
+    return context.user; // null if not authenticated
   },
 
   users: (parent, args, context) => {
-    if (!context.user || context.user.role !== 'ADMIN') {
-      throw new Error('Unauthorized');
+    if (!context.user || context.user.role !== "ADMIN") {
+      throw new Error("Unauthorized");
     }
     return context.db.users.findAll();
-  }
+  },
 };
 ```
 
 ### Three Authorization Patterns
 
 **1. Query/Mutation-Level**: Entire operation requires auth
+
 ```typescript
 // "Only admins can list all users"
 users: (parent, args, context) => {
-  requireRole(context.user, 'ADMIN');
+  requireRole(context.user, "ADMIN");
   return db.users.findAll();
-}
+};
 ```
 
 **2. Entity-Level**: Filter results based on ownership
+
 ```typescript
 // "Users see their own orders, admins see all orders"
 orders: (parent, args, context) => {
-  if (!context.user) throw new Error('Unauthenticated');
+  if (!context.user) throw new Error("Unauthenticated");
 
-  if (context.user.role === 'ADMIN') {
+  if (context.user.role === "ADMIN") {
     return db.orders.findAll();
   }
   return db.orders.findByBuyerId(context.user.id);
-}
+};
 ```
 
 **3. Field-Level**: Specific fields have access rules
+
 ```typescript
 // User.email is only visible to self and admins
 User: {
   email: (user, args, context) => {
     const isSelf = context.user?.id === user.id;
-    const isAdmin = context.user?.role === 'ADMIN';
+    const isAdmin = context.user?.role === "ADMIN";
 
     if (!isSelf && !isAdmin) {
-      return null;  // or throw an error
+      return null; // or throw an error
     }
     return user.email;
-  }
+  };
 }
 ```
 
@@ -121,11 +126,12 @@ The `me` query is a GraphQL convention for "get the authenticated user":
 
 ```graphql
 type Query {
-  me: User  # Returns null if not authenticated
+  me: User # Returns null if not authenticated
 }
 ```
 
 This is cleaner than `user(id: "me")` because:
+
 - It's self-documenting
 - It doesn't require the client to know their own ID
 - It cleanly returns `null` when unauthenticated (no error)
@@ -142,9 +148,9 @@ Roles are stored in the database (`users.role`) and checked in business logic:
 
 ```typescript
 function requireRole(user: User | null, allowedRoles: Role[]): void {
-  if (!user) throw new Error('Authentication required');
+  if (!user) throw new Error("Authentication required");
   if (!allowedRoles.includes(user.role)) {
-    throw new Error('Insufficient permissions');
+    throw new Error("Insufficient permissions");
   }
 }
 ```
@@ -161,6 +167,7 @@ Most modern GraphQL APIs use JWTs (JSON Web Tokens):
 For this stage, the test runner signs JWTs with a shared secret. Your server must verify tokens using the same secret and extract the user identity from the payload.
 
 **JWT configuration:**
+
 - **Secret**: Read from the `JWT_SECRET` environment variable (default: `graphql-training-secret`)
 - **Algorithm**: HS256 (HMAC-SHA256)
 
@@ -179,13 +186,14 @@ For this stage, the test runner signs JWTs with a shared secret. Your server mus
 
 The test runner generates tokens for three pre-seeded users:
 
-| Role | `sub` | `email` | `name` |
-|------|-------|---------|--------|
-| CUSTOMER | user-001 | alice@example.com | Alice Johnson |
-| SELLER | user-003 | carol@example.com | Carol Williams |
-| ADMIN | user-005 | eve@example.com | Eve Davis |
+| Role     | `sub`    | `email`           | `name`         |
+| -------- | -------- | ----------------- | -------------- |
+| CUSTOMER | user-001 | alice@example.com | Alice Johnson  |
+| SELLER   | user-003 | carol@example.com | Carol Williams |
+| ADMIN    | user-005 | eve@example.com   | Eve Davis      |
 
 Your authentication middleware should:
+
 1. Extract the token from the `Authorization: Bearer <token>` header
 2. Verify the signature using `JWT_SECRET`
 3. Decode the payload and populate `context.user` with `{ id: sub, email, name, role }`
@@ -200,9 +208,9 @@ Some fields have different visibility rules than their parent type:
 ```graphql
 type User {
   id: ID!
-  name: String!          # Public
-  email: String!         # Only visible to self and admins
-  role: Role!            # Public
+  name: String! # Public
+  email: String! # Only visible to self and admins
+  role: Role! # Public
 }
 ```
 
@@ -214,16 +222,17 @@ User: {
     if (canViewEmail(context.user, user)) {
       return user.email;
     }
-    return null;  // Hide the email
-  }
+    return null; // Hide the email
+  };
 }
 ```
 
 **Trade-off**: Returning `null` vs. throwing an error. Both are valid:
+
 - **Return null**: Field is hidden but doesn't break the query
 - **Throw error**: Client knows auth failed, but adds to `errors` array
 
-Choose based on your API's semantics. If the field is `String!` (non-null), you *must* throw (null would violate the schema).
+Choose based on your API's semantics. If the field is `String!` (non-null), you _must_ throw (null would violate the schema).
 
 ## Key Questions
 
@@ -251,10 +260,10 @@ Set up context in your server:
 const server = new ApolloServer({
   schema,
   context: async ({ req }) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = req.headers.authorization?.replace("Bearer ", "");
     const user = token ? await verifyToken(token) : null;
     return { user, db, dataloaders };
-  }
+  },
 });
 ```
 
@@ -265,13 +274,13 @@ const Query = {
   me: (parent, args, context) => context.user,
 
   users: (parent, args, context) => {
-    if (context.user?.role !== 'ADMIN') {
-      throw new GraphQLError('Unauthorized', {
-        extensions: { code: 'FORBIDDEN' }
+    if (context.user?.role !== "ADMIN") {
+      throw new GraphQLError("Unauthorized", {
+        extensions: { code: "FORBIDDEN" },
       });
     }
     return db.users.findAll();
-  }
+  },
 };
 ```
 

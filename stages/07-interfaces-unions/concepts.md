@@ -36,18 +36,23 @@ Abstract types are GraphQL's answer to "how do I query heterogeneous data?" When
 ## Implementation Notes
 
 ### graphql-js (JavaScript/TypeScript)
+
 Interfaces require a `resolveType` function that returns the concrete type name (e.g., `"Product"`). Unions require the same. For `node(id)`, decode the ID to determine the type, then call the appropriate data loader or resolver. Use `GraphQLInterfaceType` and `GraphQLUnionType` in schema definitions.
 
 ### gqlgen (Go)
+
 In the schema, declare interfaces and unions in SDL. gqlgen generates `Is<InterfaceName>()` methods on each implementing type. For `resolveType`, return the type name string. For `node(id)`, parse the ID and dispatch to the correct resolver. Use type assertions to distinguish union members.
 
 ### Hot Chocolate (.NET)
+
 Interfaces are defined via classes or interfaces annotated with `[InterfaceType]`. Unions use `[UnionType]`. Implement `Resolve` methods for abstract types to return the correct concrete instance. For `node(id)`, decode the ID and call the appropriate repository method. Hot Chocolate handles `__typename` automatically.
 
 ### Strawberry (Python)
+
 Define interfaces with `@strawberry.interface` and unions with `strawberry.union`. Implement `resolve_type` for interfaces and unions to return the concrete type. For `node(id)`, decode the ID and dispatch to the correct data loader. Use `typing.Union` for union types.
 
 ### graphql-java (Java)
+
 Use `GraphQLInterfaceType` and `GraphQLUnionType`. Implement `TypeResolver` to return the correct `GraphQLObjectType` for interfaces and unions. For `node(id)`, parse the global ID and call the appropriate service method. Use `instanceof` checks to handle union types.
 
 ## Official GraphQL Documentation

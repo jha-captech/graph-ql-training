@@ -59,7 +59,7 @@ query ViewOwnEmail {
   me {
     id
     name
-    email  # Should be visible
+    email # Should be visible
   }
 }
 
@@ -67,7 +67,7 @@ query ViewOtherUserEmail {
   user(id: "user-002") {
     id
     name
-    email  # Should be null for non-admin, non-self
+    email # Should be null for non-admin, non-self
   }
 }
 
@@ -78,19 +78,19 @@ query ViewMultipleUsersEmails {
   me {
     id
     name
-    email  # Visible (self)
+    email # Visible (self)
   }
 
   user1: user(id: "user-002") {
     id
     name
-    email  # Null or error if not admin
+    email # Null or error if not admin
   }
 
   user2: user(id: "user-003") {
     id
     name
-    email  # Null or error if not admin
+    email # Null or error if not admin
   }
 }
 
@@ -102,7 +102,7 @@ query AdminViewAllEmails {
   users {
     id
     name
-    email  # Visible for all users when requested by admin
+    email # Visible for all users when requested by admin
     role
   }
 }
@@ -139,12 +139,7 @@ mutation CreateProductAsSeller {
 # Test with CUSTOMER token
 # ============================================================
 mutation CreateProductAsCustomer {
-  createProduct(
-    input: {
-      title: "Customer Attempted Product"
-      price: 9999
-    }
-  ) {
+  createProduct(input: { title: "Customer Attempted Product", price: 9999 }) {
     __typename
     ... on CreateProductSuccess {
       product {
@@ -164,12 +159,7 @@ mutation CreateProductAsCustomer {
 # Remove Authorization header
 # ============================================================
 mutation CreateProductUnauthenticated {
-  createProduct(
-    input: {
-      title: "Unauthenticated Product"
-      price: 9999
-    }
-  ) {
+  createProduct(input: { title: "Unauthenticated Product", price: 9999 }) {
     __typename
     ... on CreateProductSuccess {
       product {
@@ -189,10 +179,7 @@ mutation CreateProductUnauthenticated {
 mutation UpdateProductAsAdmin {
   updateProduct(
     id: "prod-001"
-    input: {
-      title: "Admin Updated Title"
-      price: 19999
-    }
+    input: { title: "Admin Updated Title", price: 19999 }
   ) {
     product {
       id
@@ -234,11 +221,7 @@ mutation CreateReviewAsCustomer {
 # ============================================================
 mutation CreateReviewUnauthenticated {
   createReview(
-    input: {
-      productId: "prod-001"
-      rating: 5
-      body: "Unauthenticated review"
-    }
+    input: { productId: "prod-001", rating: 5, body: "Unauthenticated review" }
   ) {
     review {
       id
@@ -294,7 +277,7 @@ query PublicProductDetails {
       body
       author {
         name
-        email  # Should be restricted
+        email # Should be restricted
       }
     }
   }
@@ -312,7 +295,7 @@ query UserReviewsWithAuthorEmails {
       author {
         id
         name
-        email  # Field-level auth applies here too
+        email # Field-level auth applies here too
       }
     }
   }
@@ -336,7 +319,7 @@ query PublicSearch {
     ... on User {
       id
       name
-      email  # Should be restricted
+      email # Should be restricted
     }
   }
 }
@@ -349,7 +332,7 @@ query NodeWithAuth {
     id
     ... on User {
       name
-      email  # Field-level auth applies
+      email # Field-level auth applies
       role
     }
   }
@@ -377,14 +360,14 @@ query ComplexAuthQuery {
   me {
     id
     name
-    email  # Visible (self)
+    email # Visible (self)
   }
 
   # Requires admin
   users {
     id
     name
-    email  # Should fail for non-admin
+    email # Should fail for non-admin
   }
 
   # Public with restricted fields
@@ -394,7 +377,7 @@ query ComplexAuthQuery {
       rating
       author {
         name
-        email  # Restricted
+        email # Restricted
       }
     }
   }

@@ -13,11 +13,13 @@ You'll replace generic `String!` fields with typed scalars (`createdAt: DateTime
 ### Custom Scalars
 
 **Without custom scalars:**
+
 - `price: Float!` — Is this dollars? Cents? Euros? What precision?
 - `email: String!` — Clients must validate format, leading to inconsistent UX
 - `createdAt: String!` — Is it ISO 8601? Unix timestamp? Timezone?
 
 **With custom scalars:**
+
 - `price: Money!` — Serialized as cents (integer), eliminating floating-point errors
 - `email: EmailAddress!` — Server validates on input, rejects malformed emails
 - `createdAt: DateTime!` — Always ISO 8601, timezone-aware
@@ -52,11 +54,13 @@ This stage demonstrates evolution: the old `price: Float!` field is deprecated i
 Every custom scalar implements three functions:
 
 1. **serialize**: Internal value → client-facing value (GraphQL response)
+
    - `DateTime`: `Date object → ISO 8601 string`
    - `Money`: `cents integer → dollars float` (or keep as cents)
    - `EmailAddress`: `string → string` (passthrough, validation happens on input)
 
 2. **parseValue**: Variable value → internal value (from `variables` in request)
+
    - `DateTime`: `ISO 8601 string → Date object`
    - `Money`: `dollars float → cents integer`
    - `EmailAddress`: `string → validated string` (reject if invalid)
@@ -109,16 +113,16 @@ const authDirective = (next, source, args, context, info) => {
 
 ### Schema Evolution Strategy
 
-| Change Type | Breaking? | Strategy |
-|-------------|-----------|----------|
-| Add field | No | Just add it |
-| Add type | No | Just add it |
-| Add enum value | Maybe | New values may surprise old clients |
-| Add argument | No | Make it optional |
-| Deprecate field | No | Mark with `@deprecated`, keep functional |
-| Remove field | Yes | Only after all clients stop using it |
-| Change field type | Yes | Add new field, deprecate old |
-| Rename field | Yes | Add new field, deprecate old |
+| Change Type       | Breaking? | Strategy                                 |
+| ----------------- | --------- | ---------------------------------------- |
+| Add field         | No        | Just add it                              |
+| Add type          | No        | Just add it                              |
+| Add enum value    | Maybe     | New values may surprise old clients      |
+| Add argument      | No        | Make it optional                         |
+| Deprecate field   | No        | Mark with `@deprecated`, keep functional |
+| Remove field      | Yes       | Only after all clients stop using it     |
+| Change field type | Yes       | Add new field, deprecate old             |
+| Rename field      | Yes       | Add new field, deprecate old             |
 
 This stage demonstrates the **change field type** pattern: `price: Float!` is deprecated, `pricing: Pricing!` is added.
 
@@ -129,16 +133,16 @@ This stage demonstrates the **change field type** pattern: `price: Float!` is de
 Use `graphql-scalars` package for common scalars:
 
 ```typescript
-import { DateTimeResolver, EmailAddressResolver } from 'graphql-scalars';
-import { GraphQLScalarType, Kind } from 'graphql';
+import { DateTimeResolver, EmailAddressResolver } from "graphql-scalars";
+import { GraphQLScalarType, Kind } from "graphql";
 
 const resolvers = {
   DateTime: DateTimeResolver,
   EmailAddress: EmailAddressResolver,
 
   Money: new GraphQLScalarType({
-    name: 'Money',
-    description: 'Monetary amount in cents',
+    name: "Money",
+    description: "Monetary amount in cents",
     serialize(value: number) {
       return value / 100; // cents to dollars for output
     },
@@ -150,32 +154,36 @@ const resolvers = {
         return Math.round(parseFloat(ast.value) * 100);
       }
       return null;
-    }
-  })
+    },
+  }),
 };
 ```
 
 Custom directives with `@graphql-tools/schema`:
 
 ```typescript
-import { mapSchema, getDirective, MapperKind } from '@graphql-tools/utils';
+import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils";
 
 function authDirectiveTransformer(schema, directiveName) {
   return mapSchema(schema, {
     [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-      const authDirective = getDirective(schema, fieldConfig, directiveName)?.[0];
+      const authDirective = getDirective(
+        schema,
+        fieldConfig,
+        directiveName,
+      )?.[0];
       if (authDirective) {
         const { requires } = authDirective;
         const originalResolve = fieldConfig.resolve;
         fieldConfig.resolve = async (source, args, context, info) => {
           if (context.user?.role !== requires) {
-            throw new Error('Unauthorized');
+            throw new Error("Unauthorized");
           }
           return originalResolve(source, args, context, info);
         };
       }
       return fieldConfig;
-    }
+    },
   });
 }
 ```
@@ -349,6 +357,7 @@ Old clients using `price` still work. New clients use `pricing` for structured d
 ## What You're Building
 
 A server that:
+
 1. Defines three custom scalars:
    - `DateTime` — serializes to/from ISO 8601 strings (e.g., `"2025-01-15T10:00:00.000Z"`)
    - `EmailAddress` — validates email format on input, rejects malformed emails

@@ -236,11 +236,7 @@ fragment CategoryInfo on Category {
   name
 }
 
-query ComplexQuery(
-  $id1: ID!
-  $id2: ID!
-  $includeCategories: Boolean!
-) {
+query ComplexQuery($id1: ID!, $id2: ID!, $includeCategories: Boolean!) {
   first: product(id: $id1) {
     ...ProductBasicInfo
     categories @include(if: $includeCategories) {

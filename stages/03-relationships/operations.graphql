@@ -131,7 +131,7 @@ query GetProductsWithCategoryNames {
   products {
     title
     categories {
-      name  # Only fetch the name, not the id
+      name # Only fetch the name, not the id
     }
   }
 }

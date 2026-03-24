@@ -34,29 +34,37 @@ This is elegant for developer experience—resolvers are simple, single-purpose 
 ## Implementation Notes
 
 ### graphql-js (JavaScript/TypeScript)
+
 Import the `dataloader` package. Create DataLoader instances in your context function:
+
 ```typescript
 context: ({ req }) => ({
   loaders: {
-    product: new DataLoader(keys => batchGetProducts(keys)),
-    reviews: new DataLoader(keys => batchGetReviewsByProductId(keys)),
-    user: new DataLoader(keys => batchGetUsers(keys)),
-  }
-})
+    product: new DataLoader((keys) => batchGetProducts(keys)),
+    reviews: new DataLoader((keys) => batchGetReviewsByProductId(keys)),
+    user: new DataLoader((keys) => batchGetUsers(keys)),
+  },
+});
 ```
+
 In resolvers, use `context.loaders.product.load(id)` instead of direct database calls.
 
 ### gqlgen (Go)
+
 Use the [dataloaden](https://github.com/vektah/dataloaden) code generator or implement batching manually. Create loaders in the resolver middleware:
+
 ```go
 ctx = context.WithValue(ctx, loadersKey, &Loaders{
     ProductLoader: NewProductLoader(db),
 })
 ```
+
 In resolvers, extract loaders from context and call `loader.Load(ctx, id)`.
 
 ### Hot Chocolate (.NET)
+
 Use Hot Chocolate's built-in DataLoader support via `[DataLoader]` attributes. Define loader classes implementing `BatchDataLoader<TKey, TValue>`:
+
 ```csharp
 public class ProductBatchDataLoader : BatchDataLoader<string, Product>
 {
@@ -67,10 +75,13 @@ public class ProductBatchDataLoader : BatchDataLoader<string, Product>
     }
 }
 ```
+
 Register in DI, and Hot Chocolate injects them automatically.
 
 ### Strawberry (Python)
+
 Use the [strawberry-graphql-dataloaders](https://github.com/strawberry-graphql/strawberry-graphql-django/tree/main/strawberry_django) library or [aiodataloader](https://github.com/syrusakbary/aiodataloader). Create loaders in the context:
+
 ```python
 async def get_context():
     return {
@@ -80,14 +91,18 @@ async def get_context():
         }
     }
 ```
+
 In resolvers, use `await info.context["loaders"]["product"].load(id)`.
 
 ### graphql-java (Java)
+
 Use the [java-dataloader](https://github.com/graphql-java/java-dataloader) library. Create loaders in the `DataFetchingEnvironment`:
+
 ```java
 DataLoaderRegistry registry = new DataLoaderRegistry();
 registry.register("products", new DataLoader<>(keys -> CompletableFuture.supplyAsync(() -> batchLoadProducts(keys))));
 ```
+
 In data fetchers, get the loader: `env.getDataLoader("products").load(id)`.
 
 ## Official GraphQL Documentation
@@ -112,12 +127,14 @@ Your schema remains identical to Stage 07. All tests from previous stages must s
 The feature files include a **performance test**: a query that fetches all products with reviews and authors must complete within a time threshold (e.g., 500ms for 50+ products). This is only achievable with batching.
 
 Without DataLoader:
+
 - Query 50 products: 1 query
 - Query reviews for each: 50 queries
 - Query authors for reviews: ~200 queries (if each product has ~4 reviews)
 - Total: ~251 queries
 
 With DataLoader:
+
 - Query 50 products: 1 query
 - Batch query reviews by product IDs: 1 query
 - Batch query authors by user IDs: 1 query

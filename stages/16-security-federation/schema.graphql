@@ -94,7 +94,8 @@ type Product implements Node & Timestamped {
   reviews: [Review!]!
   averageRating: Float
   seller: User
-  shippingEstimate(zipCode: String!): ShippingEstimate @cacheControl(maxAge: 3600)
+  shippingEstimate(zipCode: String!): ShippingEstimate
+    @cacheControl(maxAge: 3600)
   createdAt: DateTime!
   updatedAt: DateTime!
 }

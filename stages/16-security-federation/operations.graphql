@@ -78,7 +78,7 @@ query DeeplyNestedQuery {
                   reviews {
                     product {
                       seller {
-                        name  # depth: 11
+                        name # depth: 11
                       }
                     }
                   }
@@ -107,7 +107,7 @@ query CircularQuery {
                       product {
                         reviews {
                           author {
-                            name  # Very deep nesting
+                            name # Very deep nesting
                           }
                         }
                       }
@@ -182,16 +182,36 @@ query HighComplexityQuery {
 
 # Batch query that could fetch too much data
 query BatchQuery {
-  p1: product(id: "prod-001") { ...ProductDetails }
-  p2: product(id: "prod-002") { ...ProductDetails }
-  p3: product(id: "prod-003") { ...ProductDetails }
-  p4: product(id: "prod-004") { ...ProductDetails }
-  p5: product(id: "prod-005") { ...ProductDetails }
-  p6: product(id: "prod-006") { ...ProductDetails }
-  p7: product(id: "prod-007") { ...ProductDetails }
-  p8: product(id: "prod-008") { ...ProductDetails }
-  p9: product(id: "prod-009") { ...ProductDetails }
-  p10: product(id: "prod-010") { ...ProductDetails }
+  p1: product(id: "prod-001") {
+    ...ProductDetails
+  }
+  p2: product(id: "prod-002") {
+    ...ProductDetails
+  }
+  p3: product(id: "prod-003") {
+    ...ProductDetails
+  }
+  p4: product(id: "prod-004") {
+    ...ProductDetails
+  }
+  p5: product(id: "prod-005") {
+    ...ProductDetails
+  }
+  p6: product(id: "prod-006") {
+    ...ProductDetails
+  }
+  p7: product(id: "prod-007") {
+    ...ProductDetails
+  }
+  p8: product(id: "prod-008") {
+    ...ProductDetails
+  }
+  p9: product(id: "prod-009") {
+    ...ProductDetails
+  }
+  p10: product(id: "prod-010") {
+    ...ProductDetails
+  }
   # ... could continue for 100+ fields
 }
 

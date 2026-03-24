@@ -63,7 +63,7 @@ const context = {
   db: sqliteConnection,
   dataloaders: createDataLoaders(db),
   shippingClient: axios.create({ baseURL: process.env.SHIPPING_API_URL }),
-  user: authenticatedUser
+  user: authenticatedUser,
 };
 
 // Resolver
@@ -71,14 +71,14 @@ Product: {
   shippingEstimate: async (product, { zipCode }, context) => {
     try {
       const response = await context.shippingClient.get(`/estimate`, {
-        params: { productId: product.id, zip: zipCode }
+        params: { productId: product.id, zip: zipCode },
       });
       return response.data;
     } catch (error) {
-      console.error('Shipping API error:', error);
+      console.error("Shipping API error:", error);
       return null; // Graceful degradation
     }
-  }
+  };
 }
 ```
 
@@ -92,28 +92,28 @@ Product: {
 - Handle errors with try/catch, return `null` on failure
 
 ```typescript
-import axios from 'axios';
+import axios from "axios";
 
 const shippingClient = axios.create({
-  baseURL: process.env.SHIPPING_API_URL || 'http://localhost:4010',
-  timeout: 5000
+  baseURL: process.env.SHIPPING_API_URL || "http://localhost:4010",
+  timeout: 5000,
 });
 
 const resolvers = {
   Product: {
     shippingEstimate: async (parent, { zipCode }, context) => {
       try {
-        const { data } = await shippingClient.get('/estimate', {
-          params: { productId: parent.id, zip: zipCode }
+        const { data } = await shippingClient.get("/estimate", {
+          params: { productId: parent.id, zip: zipCode },
         });
         return data;
       } catch (error) {
         // Log for monitoring, return null for graceful degradation
-        context.logger.error('Shipping API failed', error);
+        context.logger.error("Shipping API failed", error);
         return null;
       }
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -213,6 +213,7 @@ class Product:
    Semantically, there's no difference in the response. For monitoring, log errors. For clients, document when `null` means "unavailable" vs. "doesn't exist".
 
 5. **How would you cache external API responses?**
+
    - In-memory cache (TTL-based): `node-cache`, `memory-cache`
    - Redis: Shared cache across server instances
    - HTTP cache headers: `Cache-Control`, `ETag`
@@ -222,6 +223,7 @@ class Product:
    Yes, if the API supports batch requests (e.g., `/estimate?ids=1,2,3`). DataLoader batches individual calls into one HTTP request, reducing latency.
 
 7. **How do you test resolvers that call external APIs?**
+
    - **Unit tests**: Mock the HTTP client, return fake responses
    - **Integration tests**: Use Mockoon or WireMock to simulate the API
    - **Contract tests**: Verify your mocks match the real API's behavior
@@ -259,6 +261,7 @@ Your resolver should call `http://localhost:4010/estimate`. The test runner will
 ## What You're Building
 
 A server that:
+
 1. Adds a `ShippingEstimate` type with fields: `provider` (String!), `days` (Int!), `cost` (Float!)
 2. Adds a `shippingEstimate(zipCode: String!)` field on the `Product` type — this field is **nullable** (returns `null` on API failure)
 3. Implements a resolver for `Product.shippingEstimate` that:

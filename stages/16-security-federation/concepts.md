@@ -5,6 +5,7 @@
 This stage focuses on hardening your GraphQL API against malicious or inefficient queries and introduces the concepts of Apollo Federation for building distributed GraphQL architectures. You'll learn to implement query complexity analysis, depth limiting, persisted queries, and understand how federation enables microservice-based GraphQL implementations.
 
 **Key topics:**
+
 - Query depth limiting to prevent deeply nested attacks
 - Query complexity analysis to prevent resource exhaustion
 - Persisted queries for security and performance
@@ -46,47 +47,52 @@ These patterns are essential for production GraphQL APIs. Major platforms (GitHu
 ## Implementation Notes by Framework
 
 ### graphql-js (Node.js / TypeScript)
+
 **Depth limiting:**
+
 ```typescript
-import depthLimit from 'graphql-depth-limit';
+import depthLimit from "graphql-depth-limit";
 
 const server = new ApolloServer({
   schema,
-  validationRules: [depthLimit(7)]
+  validationRules: [depthLimit(7)],
 });
 ```
 
 **Complexity analysis:**
+
 ```typescript
-import { createComplexityLimitRule } from 'graphql-validation-complexity';
+import { createComplexityLimitRule } from "graphql-validation-complexity";
 
 const complexityRule = createComplexityLimitRule(1000, {
   scalarCost: 1,
   objectCost: 2,
-  listFactor: 10
+  listFactor: 10,
 });
 
 const server = new ApolloServer({
   schema,
-  validationRules: [complexityRule]
+  validationRules: [complexityRule],
 });
 ```
 
 **Persisted queries:**
+
 ```typescript
-import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 
 const server = new ApolloServer({
   schema,
   persistedQueries: {
-    cache: new InMemoryLRUCache()
-  }
+    cache: new InMemoryLRUCache(),
+  },
 });
 ```
 
 **Federation (subgraph):**
+
 ```typescript
-import { buildSubgraphSchema } from '@apollo/subgraph';
+import { buildSubgraphSchema } from "@apollo/subgraph";
 
 const schema = buildSubgraphSchema({
   typeDefs: gql`
@@ -99,25 +105,28 @@ const schema = buildSubgraphSchema({
     Product: {
       __resolveReference(ref) {
         return fetchProductById(ref.id);
-      }
-    }
-  }
+      },
+    },
+  },
 });
 ```
 
 **Federation (gateway):**
+
 ```typescript
-import { ApolloGateway } from '@apollo/gateway';
+import { ApolloGateway } from "@apollo/gateway";
 
 const gateway = new ApolloGateway({
-  supergraphSdl: composedSchema
+  supergraphSdl: composedSchema,
 });
 
 const server = new ApolloServer({ gateway });
 ```
 
 ### gqlgen (Go)
+
 **Depth limiting:**
+
 ```go
 import "github.com/99designs/gqlgen/graphql/handler/extension"
 
@@ -126,6 +135,7 @@ srv.Use(extension.DepthLimit(7))
 ```
 
 **Complexity analysis:**
+
 ```go
 srv.Use(extension.FixedComplexityLimit(1000))
 // Or custom complexity per field:
@@ -133,6 +143,7 @@ srv.SetQueryRuntimeLimit(time.Second * 30)
 ```
 
 **Federation:**
+
 ```go
 import "github.com/99designs/gqlgen/plugin/federation"
 
@@ -149,7 +160,9 @@ func (r *entityResolver) FindProductByID(ctx context.Context, id string) (*model
 ```
 
 ### Hot Chocolate (.NET)
+
 **Depth limiting:**
+
 ```csharp
 services
   .AddGraphQLServer()
@@ -157,6 +170,7 @@ services
 ```
 
 **Complexity analysis:**
+
 ```csharp
 services
   .AddGraphQLServer()
@@ -168,6 +182,7 @@ services
 ```
 
 **Federation:**
+
 ```csharp
 services
   .AddGraphQLServer()
@@ -181,7 +196,9 @@ services
 ```
 
 ### Strawberry (Python)
+
 **Depth limiting:**
+
 ```python
 from strawberry.extensions import MaxDepthExtension
 
@@ -192,6 +209,7 @@ schema = strawberry.Schema(
 ```
 
 **Complexity analysis:**
+
 ```python
 from strawberry.extensions import QueryDepthLimiter
 
@@ -203,6 +221,7 @@ class Query:
 ```
 
 **Federation:**
+
 ```python
 import strawberry
 from strawberry.federation import FederatedType
@@ -218,7 +237,9 @@ class Product:
 ```
 
 ### graphql-java (Java)
+
 **Depth limiting:**
+
 ```java
 import graphql.analysis.MaxQueryDepthInstrumentation;
 
@@ -228,6 +249,7 @@ GraphQL graphQL = GraphQL.newGraphQL(schema)
 ```
 
 **Complexity analysis:**
+
 ```java
 import graphql.analysis.MaxQueryComplexityInstrumentation;
 
@@ -240,6 +262,7 @@ GraphQL graphQL = GraphQL.newGraphQL(schema)
 ```
 
 **Federation:**
+
 ```java
 import com.apollographql.federation.graphqljava.Federation;
 
@@ -263,6 +286,7 @@ GraphQLSchema schema = Federation.transform(runtimeWiring)
 In this stage, you're implementing security guardrails for the existing e-commerce API and learning federation concepts:
 
 **Security hardening:**
+
 - Reject queries deeper than 7-10 levels (configurable)
 - Calculate query complexity and reject expensive queries (> 1000 cost)
 - Block queries that would fetch more than 1000 items
@@ -270,6 +294,7 @@ In this stage, you're implementing security guardrails for the existing e-commer
 - Support persisted queries for production clients
 
 **Federation concepts (conceptual tests):**
+
 - Understand the `_service { sdl }` query that exposes subgraph schema
 - Learn how `_entities` query resolves references across subgraphs
 - See how the Product, User, and Order types could be split into:
@@ -281,6 +306,7 @@ In this stage, you're implementing security guardrails for the existing e-commer
 **Schema stays the same** as stage 15—this stage is about operational concerns and architecture patterns, not schema changes.
 
 **Testing approach:**
+
 - Feature tests verify depth/complexity limits reject malicious queries
 - Feature tests demonstrate the `_service` introspection for federation
 - Conceptual tests explore how entity resolution would work (no full federation implementation required)

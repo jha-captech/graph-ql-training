@@ -6,13 +6,13 @@ A progressive, language-agnostic GraphQL curriculum. You receive schemas, Gherki
 
 Install these tools before starting:
 
-| Tool | Purpose | Install |
-|------|---------|---------|
-| [Node.js](https://nodejs.org/) 18+ | Test runner | `brew install node` |
-| [SQLite](https://sqlite.org/) 3.35+ | Database | `brew install sqlite3` |
+| Tool                                                        | Purpose             | Install                       |
+| ----------------------------------------------------------- | ------------------- | ----------------------------- |
+| [Node.js](https://nodejs.org/) 18+                          | Test runner         | `brew install node`           |
+| [SQLite](https://sqlite.org/) 3.35+                         | Database            | `brew install sqlite3`        |
 | [golang-migrate](https://github.com/golang-migrate/migrate) | Database migrations | `brew install golang-migrate` |
-| [go-task](https://taskfile.dev/) | Task runner | `brew install go-task` |
-| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+) | External API mocks | `npm install -g @mockoon/cli` |
+| [go-task](https://taskfile.dev/)                            | Task runner         | `brew install go-task`        |
+| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+)         | External API mocks  | `npm install -g @mockoon/cli` |
 
 ## Quick Start
 
@@ -51,24 +51,24 @@ Each stage builds on the previous one. Schemas are cumulative — stage 06's sch
 
 ## Stage Overview
 
-| Stage | Topic | Database | Seed Data |
-|-------|-------|----------|-----------|
-| 01 | Hello GraphQL | None | None |
-| 02 | Types & Enums | Migrations 1-3 | `base.sql` |
-| 03 | Relationships | Migrations 1-3 | `base.sql` |
-| 04 | Mutations | Migrations 1-3 | `base.sql` |
-| 05 | Query Language | Migrations 1-3 | `base.sql` |
-| 06 | Users & Reviews | Migrations 1-5 | `full.sql` |
-| 07 | Interfaces & Unions | Migrations 1-5 | `full.sql` |
-| 08 | DataLoader | Migrations 1-5 | `full.sql` |
-| 09 | Pagination | Migrations 1-6 | `full.sql` |
-| 10 | Error Handling | Migrations 1-6 | `full.sql` |
-| 11 | Authentication | Migrations 1-6 | `full.sql` |
-| 12 | Orders | Migrations 1-10 | `full_with_orders.sql` |
-| 13 | Subscriptions | Migrations 1-10 | `full_with_orders.sql` |
-| 14 | Remote Data Sources | Migrations 1-10 | `full_with_orders.sql` |
-| 15 | Custom Scalars & Evolution | Migrations 1-11 | `full_with_orders.sql` |
-| 16 | Security & Federation | Migrations 1-11 | `full_with_orders.sql` |
+| Stage | Topic                      | Database        | Seed Data              |
+| ----- | -------------------------- | --------------- | ---------------------- |
+| 01    | Hello GraphQL              | None            | None                   |
+| 02    | Types & Enums              | Migrations 1-3  | `base.sql`             |
+| 03    | Relationships              | Migrations 1-3  | `base.sql`             |
+| 04    | Mutations                  | Migrations 1-3  | `base.sql`             |
+| 05    | Query Language             | Migrations 1-3  | `base.sql`             |
+| 06    | Users & Reviews            | Migrations 1-5  | `full.sql`             |
+| 07    | Interfaces & Unions        | Migrations 1-5  | `full.sql`             |
+| 08    | DataLoader                 | Migrations 1-5  | `full.sql`             |
+| 09    | Pagination                 | Migrations 1-6  | `full.sql`             |
+| 10    | Error Handling             | Migrations 1-6  | `full.sql`             |
+| 11    | Authentication             | Migrations 1-6  | `full.sql`             |
+| 12    | Orders                     | Migrations 1-10 | `full_with_orders.sql` |
+| 13    | Subscriptions              | Migrations 1-10 | `full_with_orders.sql` |
+| 14    | Remote Data Sources        | Migrations 1-10 | `full_with_orders.sql` |
+| 15    | Custom Scalars & Evolution | Migrations 1-11 | `full_with_orders.sql` |
+| 16    | Security & Federation      | Migrations 1-11 | `full_with_orders.sql` |
 
 ## Task Commands
 
@@ -112,11 +112,11 @@ npx cucumber-js --dry-run --tags @stage:02
 
 Tests that require auth use JWT tokens signed with the secret `graphql-training-secret`. The test runner generates tokens for three roles:
 
-| Role | User ID | Name | Email |
-|------|---------|------|-------|
-| CUSTOMER | user-001 | Alice Johnson | alice@example.com |
-| SELLER | user-003 | Carol Williams | carol@example.com |
-| ADMIN | user-005 | Eve Davis | eve@example.com |
+| Role     | User ID  | Name           | Email             |
+| -------- | -------- | -------------- | ----------------- |
+| CUSTOMER | user-001 | Alice Johnson  | alice@example.com |
+| SELLER   | user-003 | Carol Williams | carol@example.com |
+| ADMIN    | user-005 | Eve Davis      | eve@example.com   |
 
 Your server should validate JWT tokens from the `Authorization: Bearer <token>` header using the same secret.
 
@@ -145,13 +145,13 @@ Your server should validate JWT tokens from the `Authorization: Bearer <token>` 
 
 This curriculum works with any GraphQL server implementation. Some popular choices:
 
-| Language | Framework | Getting Started |
-|----------|-----------|-----------------|
-| TypeScript | Apollo Server, graphql-yoga | `npm init` |
-| Go | gqlgen | `go mod init` |
-| Python | Strawberry, Ariadne | `pip install strawberry-graphql` |
-| .NET | Hot Chocolate | `dotnet new web` |
-| Java | graphql-java, DGS | Spring Boot starter |
-| Rust | async-graphql, Juniper | `cargo init` |
+| Language   | Framework                   | Getting Started                  |
+| ---------- | --------------------------- | -------------------------------- |
+| TypeScript | Apollo Server, graphql-yoga | `npm init`                       |
+| Go         | gqlgen                      | `go mod init`                    |
+| Python     | Strawberry, Ariadne         | `pip install strawberry-graphql` |
+| .NET       | Hot Chocolate               | `dotnet new web`                 |
+| Java       | graphql-java, DGS           | Spring Boot starter              |
+| Rust       | async-graphql, Juniper      | `cargo init`                     |
 
 Pick any framework. The tests don't care how you build it — only that it serves the right schema at the right endpoint.

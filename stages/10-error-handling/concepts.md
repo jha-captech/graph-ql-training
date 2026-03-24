@@ -15,7 +15,7 @@ Production GraphQL APIs must handle errors gracefully and communicate failure mo
 - **Information leaks**: Stack traces or database errors exposed to clients
 - **Poor UX**: Generic "something went wrong" messages instead of actionable feedback
 
-GraphQL's error model is more nuanced than HTTP status codes. A `200 OK` response can contain errors. A field can be `null` because of missing data *or* because an error occurred. This stage teaches you to navigate these complexities.
+GraphQL's error model is more nuanced than HTTP status codes. A `200 OK` response can contain errors. A field can be `null` because of missing data _or_ because an error occurred. This stage teaches you to navigate these complexities.
 
 ## Mental Models
 
@@ -24,6 +24,7 @@ GraphQL's error model is more nuanced than HTTP status codes. A `200 OK` respons
 **1. Expected Errors (Domain Logic)**
 
 These are validation failures, business rule violations, or predictable failure states. Examples:
+
 - "Email already registered"
 - "Price must be positive"
 - "Product not found"
@@ -44,6 +45,7 @@ type ValidationError {
 **2. Unexpected Errors (System Failures)**
 
 These are crashes, bugs, network failures, or infrastructure problems. Examples:
+
 - Database connection timeout
 - Null pointer exception
 - External API unreachable
@@ -57,23 +59,31 @@ GraphQL executes queries field-by-field. If one field errors, the others can sti
 
 ```graphql
 {
-  product(id: "prod-001") { title price }  # Succeeds
-  product(id: "invalid") { title }          # Errors, returns null
-  categories { name }                       # Succeeds
+  product(id: "prod-001") {
+    title
+    price
+  } # Succeeds
+  product(id: "invalid") {
+    title
+  } # Errors, returns null
+  categories {
+    name
+  } # Succeeds
 }
 ```
 
 Response:
+
 ```json
 {
   "data": {
     "product": null,
-    "categories": [{"name": "Electronics"}]
+    "categories": [{ "name": "Electronics" }]
   },
   "errors": [
     {
       "message": "Product not found",
-      "locations": [{"line": 2, "column": 3}],
+      "locations": [{ "line": 2, "column": 3 }],
       "path": ["product"]
     }
   ]
@@ -89,7 +99,7 @@ When a `String!` (non-null) field resolver throws or returns `null`, GraphQL can
 ```graphql
 type Product {
   id: ID!
-  title: String!  # Non-null
+  title: String! # Non-null
 }
 ```
 
@@ -121,9 +131,11 @@ Top-level errors follow the GraphQL spec:
 ```
 
 **Required fields:**
+
 - `message` (string): Human-readable description
 
 **Optional fields:**
+
 - `locations` (array): Where in the query document the error occurred
 - `path` (array): Which response field the error corresponds to
 - `extensions` (object): Custom structured data (error codes, stack traces in dev, etc.)
@@ -137,7 +149,10 @@ mutation CreateProduct($input: CreateProductInput!) {
   createProduct(input: $input) {
     __typename
     ... on CreateProductSuccess {
-      product { id title }
+      product {
+        id
+        title
+      }
     }
     ... on ValidationError {
       message
@@ -156,13 +171,15 @@ Don't rely solely on error messages (they're strings, not enums). Use structured
 
 ```json
 {
-  "errors": [{
-    "message": "Title is required",
-    "extensions": {
-      "code": "VALIDATION_ERROR",
-      "field": "title"
+  "errors": [
+    {
+      "message": "Title is required",
+      "extensions": {
+        "code": "VALIDATION_ERROR",
+        "field": "title"
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -173,11 +190,13 @@ Clients can switch on `extensions.code` instead of parsing strings.
 ### Where to Throw vs. Return Errors
 
 **Throw in resolvers when:**
+
 - Unexpected system failures (database errors, network timeouts)
 - Authorization failures (403-equivalent)
 - Fatal bugs (null pointer, type errors)
 
 **Return union errors when:**
+
 - Validation failures (missing fields, invalid formats)
 - Business rule violations (insufficient inventory, duplicate email)
 - Predictable failure states (not found, already exists)
@@ -222,7 +241,7 @@ const server = new ApolloServer({
     // Add error codes
     error.extensions.code = classifyError(error);
     return error;
-  }
+  },
 });
 ```
 
@@ -249,10 +268,10 @@ Use this to sanitize errors and add consistent structure.
 Throw `GraphQLError` for top-level errors:
 
 ```typescript
-import { GraphQLError } from 'graphql';
+import { GraphQLError } from "graphql";
 
 throw new GraphQLError("Product not found", {
-  extensions: { code: "NOT_FOUND" }
+  extensions: { code: "NOT_FOUND" },
 });
 ```
 
@@ -264,12 +283,12 @@ if (!isValid) {
     __typename: "ValidationError",
     message: "Invalid input",
     field: "title",
-    code: "REQUIRED_FIELD"
+    code: "REQUIRED_FIELD",
   };
 }
 return {
   __typename: "CreateProductSuccess",
-  product: newProduct
+  product: newProduct,
 };
 ```
 

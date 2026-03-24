@@ -10,7 +10,7 @@ query ProductWithPricing {
   product(id: "prod-001") {
     id
     title
-    price  # Deprecated - still works but marked as deprecated
+    price # Deprecated - still works but marked as deprecated
     pricing {
       amount
       currency
@@ -24,10 +24,10 @@ query UserWithTypedFields {
   user(id: "user-001") {
     id
     name
-    email  # Now EmailAddress! scalar
+    email # Now EmailAddress! scalar
     role
-    createdAt  # Now DateTime! scalar
-    updatedAt  # Now DateTime! scalar
+    createdAt # Now DateTime! scalar
+    updatedAt # Now DateTime! scalar
   }
 }
 
@@ -36,10 +36,10 @@ query ProductTimestamps {
   product(id: "prod-001") {
     id
     title
-    createdAt  # DateTime! scalar
-    updatedAt  # DateTime! scalar
+    createdAt # DateTime! scalar
+    updatedAt # DateTime! scalar
     pricing {
-      amount  # Money! scalar
+      amount # Money! scalar
       currency
     }
   }
@@ -51,22 +51,22 @@ query OrderWithTypedFields {
     id
     buyer {
       name
-      email  # EmailAddress!
-      createdAt  # DateTime!
+      email # EmailAddress!
+      createdAt # DateTime!
     }
     items {
       product {
         title
         pricing {
-          amount  # Money!
+          amount # Money!
           currency
         }
       }
       quantity
-      unitPrice  # Still Float (not everything needs to be Money)
+      unitPrice # Still Float (not everything needs to be Money)
     }
-    createdAt  # DateTime!
-    updatedAt  # DateTime!
+    createdAt # DateTime!
+    updatedAt # DateTime!
   }
 }
 
@@ -76,7 +76,8 @@ query OrderWithTypedFields {
 
 # Query with @auth directive (admin-only)
 query AdminOnlyUsers {
-  users {  # Has @auth(requires: ADMIN) directive
+  users {
+    # Has @auth(requires: ADMIN) directive
     id
     name
     email
@@ -89,7 +90,8 @@ query ProductWithCacheControl {
   product(id: "prod-001") {
     id
     title
-    shippingEstimate(zipCode: "10001") {  # Has @cacheControl(maxAge: 3600)
+    shippingEstimate(zipCode: "10001") {
+      # Has @cacheControl(maxAge: 3600)
       provider
       days
       cost
@@ -141,42 +143,42 @@ query CustomScalars {
 
 # Create review with authenticated user (EmailAddress scalar used internally)
 mutation CreateReviewWithTypedUser {
-  createReview(input: {
-    productId: "prod-001"
-    rating: 5
-    body: "Testing custom scalars!"
-  }) {
+  createReview(
+    input: { productId: "prod-001", rating: 5, body: "Testing custom scalars!" }
+  ) {
     review {
       id
       rating
       body
       author {
         name
-        email  # EmailAddress!
+        email # EmailAddress!
       }
-      createdAt  # DateTime!
+      createdAt # DateTime!
     }
   }
 }
 
 # Create product - price input is Float, but stored/returned as Money
 mutation CreateProductWithPricing {
-  createProduct(input: {
-    title: "Test Product with Pricing"
-    description: "Testing Money scalar"
-    price: 129.99  # Input as float
-    categoryIds: ["cat-001"]
-  }) {
+  createProduct(
+    input: {
+      title: "Test Product with Pricing"
+      description: "Testing Money scalar"
+      price: 129.99 # Input as float
+      categoryIds: ["cat-001"]
+    }
+  ) {
     ... on CreateProductSuccess {
       product {
         id
         title
-        price  # Deprecated Float! field
+        price # Deprecated Float! field
         pricing {
-          amount  # Money! scalar (should be 129.99)
+          amount # Money! scalar (should be 129.99)
           currency
         }
-        createdAt  # DateTime!
+        createdAt # DateTime!
       }
     }
     ... on ValidationError {
@@ -222,7 +224,7 @@ query OldPricePattern {
   product(id: "prod-001") {
     id
     title
-    price  # Deprecated but functional
+    price # Deprecated but functional
   }
 }
 
@@ -234,7 +236,7 @@ query NewPricingPattern {
     pricing {
       amount
       currency
-      compareAtAmount  # New field for sale/discount display
+      compareAtAmount # New field for sale/discount display
     }
   }
 }
@@ -244,7 +246,7 @@ query CompareOldAndNew {
   product(id: "prod-001") {
     id
     title
-    oldPrice: price  # Alias for comparison
+    oldPrice: price # Alias for comparison
     pricing {
       amount
       currency
@@ -264,11 +266,11 @@ query ProductsConnectionWithTypedFields {
         id
         title
         pricing {
-          amount  # Money!
+          amount # Money!
           currency
         }
-        createdAt  # DateTime!
-        updatedAt  # DateTime!
+        createdAt # DateTime!
+        updatedAt # DateTime!
       }
     }
     pageInfo {
@@ -284,7 +286,8 @@ query ProductsConnectionWithTypedFields {
 
 # This query should fail for non-admin users
 query AdminOnlyQuery {
-  users {  # @auth(requires: ADMIN)
+  users {
+    # @auth(requires: ADMIN)
     id
     name
     email
@@ -297,8 +300,8 @@ query AuthenticatedUserQuery {
   me {
     id
     name
-    email  # EmailAddress!
-    createdAt  # DateTime!
+    email # EmailAddress!
+    createdAt # DateTime!
   }
 }
 
@@ -311,10 +314,10 @@ subscription OrderUpdatesWithTypedFields {
     id
     status
     buyer {
-      email  # EmailAddress!
-      createdAt  # DateTime!
+      email # EmailAddress!
+      createdAt # DateTime!
     }
-    updatedAt  # DateTime!
+    updatedAt # DateTime!
   }
 }
 
@@ -326,25 +329,26 @@ query CompleteTypedQuery {
   me {
     id
     name
-    email  # EmailAddress!
-    createdAt  # DateTime!
+    email # EmailAddress!
+    createdAt # DateTime!
   }
   product(id: "prod-001") {
     id
     title
     pricing {
-      amount  # Money!
+      amount # Money!
       currency
-      compareAtAmount  # Money (nullable)
+      compareAtAmount # Money (nullable)
     }
     reviews {
       rating
       author {
-        email  # EmailAddress!
+        email # EmailAddress!
       }
-      createdAt  # DateTime!
+      createdAt # DateTime!
     }
-    shippingEstimate(zipCode: "10001") {  # @cacheControl
+    shippingEstimate(zipCode: "10001") {
+      # @cacheControl
       provider
       days
       cost

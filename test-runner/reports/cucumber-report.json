@@ -7869,28 +7869,16 @@
               {
                 "rows": [
                   {
-                    "cells": [
-                      "key",
-                      "value"
-                    ]
+                    "cells": ["key", "value"]
                   },
                   {
-                    "cells": [
-                      "title",
-                      "Variable Product"
-                    ]
+                    "cells": ["title", "Variable Product"]
                   },
                   {
-                    "cells": [
-                      "description",
-                      "Created with variables"
-                    ]
+                    "cells": ["description", "Created with variables"]
                   },
                   {
-                    "cells": [
-                      "price",
-                      "5999"
-                    ]
+                    "cells": ["price", "5999"]
                   }
                 ]
               }
@@ -8459,22 +8447,13 @@
               {
                 "rows": [
                   {
-                    "cells": [
-                      "key",
-                      "value"
-                    ]
+                    "cells": ["key", "value"]
                   },
                   {
-                    "cells": [
-                      "title",
-                      "Variable Update Title"
-                    ]
+                    "cells": ["title", "Variable Update Title"]
                   },
                   {
-                    "cells": [
-                      "price",
-                      "6999"
-                    ]
+                    "cells": ["price", "6999"]
                   }
                 ]
               }
@@ -12642,28 +12621,16 @@
               {
                 "rows": [
                   {
-                    "cells": [
-                      "key",
-                      "value"
-                    ]
+                    "cells": ["key", "value"]
                   },
                   {
-                    "cells": [
-                      "title",
-                      "Variable Test Product"
-                    ]
+                    "cells": ["title", "Variable Test Product"]
                   },
                   {
-                    "cells": [
-                      "price",
-                      "9999"
-                    ]
+                    "cells": ["price", "9999"]
                   },
                   {
-                    "cells": [
-                      "description",
-                      "Created with variables"
-                    ]
+                    "cells": ["description", "Created with variables"]
                   }
                 ]
               }
@@ -41307,39 +41274,25 @@
               {
                 "rows": [
                   {
-                    "cells": [
-                      "Product"
-                    ]
+                    "cells": ["Product"]
                   },
                   {
-                    "cells": [
-                      "Category"
-                    ]
+                    "cells": ["Category"]
                   },
                   {
-                    "cells": [
-                      "User"
-                    ]
+                    "cells": ["User"]
                   },
                   {
-                    "cells": [
-                      "Review"
-                    ]
+                    "cells": ["Review"]
                   },
                   {
-                    "cells": [
-                      "Order"
-                    ]
+                    "cells": ["Order"]
                   },
                   {
-                    "cells": [
-                      "LineItem"
-                    ]
+                    "cells": ["LineItem"]
                   },
                   {
-                    "cells": [
-                      "Subscription"
-                    ]
+                    "cells": ["Subscription"]
                   }
                 ]
               }
@@ -42969,44 +42922,28 @@
               {
                 "rows": [
                   {
-                    "cells": [
-                      "Product"
-                    ]
+                    "cells": ["Product"]
                   },
                   {
-                    "cells": [
-                      "Category"
-                    ]
+                    "cells": ["Category"]
                   },
                   {
-                    "cells": [
-                      "User"
-                    ]
+                    "cells": ["User"]
                   },
                   {
-                    "cells": [
-                      "Review"
-                    ]
+                    "cells": ["Review"]
                   },
                   {
-                    "cells": [
-                      "Order"
-                    ]
+                    "cells": ["Order"]
                   },
                   {
-                    "cells": [
-                      "LineItem"
-                    ]
+                    "cells": ["LineItem"]
                   },
                   {
-                    "cells": [
-                      "Subscription"
-                    ]
+                    "cells": ["Subscription"]
                   },
                   {
-                    "cells": [
-                      "ShippingEstimate"
-                    ]
+                    "cells": ["ShippingEstimate"]
                   }
                 ]
               }
@@ -44697,19 +44634,13 @@
               {
                 "rows": [
                   {
-                    "cells": [
-                      "DateTime"
-                    ]
+                    "cells": ["DateTime"]
                   },
                   {
-                    "cells": [
-                      "EmailAddress"
-                    ]
+                    "cells": ["EmailAddress"]
                   },
                   {
-                    "cells": [
-                      "Money"
-                    ]
+                    "cells": ["Money"]
                   }
                 ]
               }

@@ -27,10 +27,7 @@ query FirstPageOfProducts {
 # Forward Pagination - Get next page using cursor
 # ============================================================
 query NextPageOfProducts {
-  productsConnection(
-    first: 10
-    after: "PASTE_CURSOR_FROM_PREVIOUS_QUERY"
-  ) {
+  productsConnection(first: 10, after: "PASTE_CURSOR_FROM_PREVIOUS_QUERY") {
     edges {
       node {
         id
@@ -53,10 +50,7 @@ query NextPageOfProducts {
 # Backward Pagination - Get previous page
 # ============================================================
 query PreviousPageOfProducts {
-  productsConnection(
-    last: 10
-    before: "PASTE_CURSOR_FROM_LATER_PAGE"
-  ) {
+  productsConnection(last: 10, before: "PASTE_CURSOR_FROM_LATER_PAGE") {
     edges {
       node {
         id
@@ -79,10 +73,7 @@ query PreviousPageOfProducts {
 # Pagination with Category Filter
 # ============================================================
 query ProductsByCategoryPaginated {
-  productsConnection(
-    first: 5
-    filter: { categoryId: "cat-001" }
-  ) {
+  productsConnection(first: 5, filter: { categoryId: "cat-001" }) {
     edges {
       node {
         id
@@ -107,13 +98,7 @@ query ProductsByCategoryPaginated {
 # Pagination with Price Range Filter
 # ============================================================
 query ProductsByPriceRange {
-  productsConnection(
-    first: 10
-    filter: {
-      minPrice: 5000
-      maxPrice: 20000
-    }
-  ) {
+  productsConnection(first: 10, filter: { minPrice: 5000, maxPrice: 20000 }) {
     edges {
       node {
         id
@@ -135,10 +120,7 @@ query ProductsByPriceRange {
 # Pagination with Status Filter (Active products only)
 # ============================================================
 query ActiveProductsPaginated {
-  productsConnection(
-    first: 10
-    filter: { status: ACTIVE }
-  ) {
+  productsConnection(first: 10, filter: { status: ACTIVE }) {
     edges {
       node {
         id
@@ -162,11 +144,7 @@ query ActiveProductsPaginated {
 query FilteredProductsPaginated {
   productsConnection(
     first: 5
-    filter: {
-      categoryId: "cat-002"
-      minPrice: 10000
-      status: ACTIVE
-    }
+    filter: { categoryId: "cat-002", minPrice: 10000, status: ACTIVE }
   ) {
     edges {
       node {
@@ -310,11 +288,7 @@ query ProductsWithVariables(
   $after: String
   $filter: ProductFilterInput
 ) {
-  productsConnection(
-    first: $first
-    after: $after
-    filter: $filter
-  ) {
+  productsConnection(first: $first, after: $after, filter: $filter) {
     edges {
       node {
         id

@@ -82,15 +82,16 @@ const pubsub = new PubSub();
 
 // In mutation resolver:
 await updateOrderStatus(orderId, newStatus);
-pubsub.publish('ORDER_STATUS_CHANGED', { orderStatusChanged: order });
+pubsub.publish("ORDER_STATUS_CHANGED", { orderStatusChanged: order });
 
 // In subscription resolver:
 Subscription: {
   orderStatusChanged: {
     subscribe: withFilter(
-      () => pubsub.asyncIterator(['ORDER_STATUS_CHANGED']),
-      (payload, variables) => payload.orderStatusChanged.id === variables.orderId
-    )
+      () => pubsub.asyncIterator(["ORDER_STATUS_CHANGED"]),
+      (payload, variables) =>
+        payload.orderStatusChanged.id === variables.orderId,
+    );
   }
 }
 ```
@@ -185,6 +186,7 @@ Then the subscription event "data.orderStatusChanged.status" should equal "SHIPP
 ## What You're Building
 
 A server that:
+
 1. Adds a `Subscription` root type with two subscriptions:
    - `orderStatusChanged(orderId: ID!): Order!` — filtered by order ID, only delivers events for the specified order
    - `productCreated: Product!` — broadcast to all subscribers when any product is created

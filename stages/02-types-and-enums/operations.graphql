@@ -70,7 +70,7 @@ query GetProductsWithNullableDescription {
   products {
     id
     title
-    description  # This can be null for some products
+    description # This can be null for some products
     status
   }
 }

@@ -1,9 +1,10 @@
-import { After, BeforeAll } from '@cucumber/cucumber';
-import { GraphQLWorld } from '../steps/world';
+import { After, BeforeAll } from "@cucumber/cucumber";
+import { GraphQLWorld } from "../steps/world";
 
 BeforeAll(function () {
   // Verify the GraphQL endpoint is configured
-  const endpoint = process.env.GRAPHQL_ENDPOINT || 'http://localhost:4000/graphql';
+  const endpoint =
+    process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql";
   console.log(`Test runner targeting: ${endpoint}`);
 });
 

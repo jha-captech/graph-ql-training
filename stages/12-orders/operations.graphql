@@ -120,13 +120,7 @@ mutation PlaceOrder {
 # Mutation: Place Order - Single Item
 # ============================================================
 mutation PlaceOrderSingleItem {
-  placeOrder(
-    input: {
-      items: [
-        { productId: "prod-010", quantity: 1 }
-      ]
-    }
-  ) {
+  placeOrder(input: { items: [{ productId: "prod-010", quantity: 1 }] }) {
     __typename
     ... on PlaceOrderSuccess {
       order {
@@ -186,11 +180,7 @@ mutation PlaceOrderMultipleItems {
 # ============================================================
 mutation PlaceOrderInvalidProduct {
   placeOrder(
-    input: {
-      items: [
-        { productId: "invalid-product-id", quantity: 1 }
-      ]
-    }
+    input: { items: [{ productId: "invalid-product-id", quantity: 1 }] }
   ) {
     __typename
     ... on PlaceOrderSuccess {
@@ -210,13 +200,7 @@ mutation PlaceOrderInvalidProduct {
 # Mutation: Place Order - Zero Quantity (should fail)
 # ============================================================
 mutation PlaceOrderZeroQuantity {
-  placeOrder(
-    input: {
-      items: [
-        { productId: "prod-001", quantity: 0 }
-      ]
-    }
-  ) {
+  placeOrder(input: { items: [{ productId: "prod-001", quantity: 0 }] }) {
     __typename
     ... on PlaceOrderSuccess {
       order {
@@ -235,11 +219,7 @@ mutation PlaceOrderZeroQuantity {
 # Mutation: Place Order - Empty Items (should fail)
 # ============================================================
 mutation PlaceOrderEmptyItems {
-  placeOrder(
-    input: {
-      items: []
-    }
-  ) {
+  placeOrder(input: { items: [] }) {
     __typename
     ... on PlaceOrderSuccess {
       order {
@@ -258,10 +238,7 @@ mutation PlaceOrderEmptyItems {
 # Mutation: Update Order Status
 # ============================================================
 mutation UpdateOrderStatus {
-  updateOrderStatus(
-    id: "ord-004"
-    status: CONFIRMED
-  ) {
+  updateOrderStatus(id: "ord-004", status: CONFIRMED) {
     id
     status
     updatedAt
@@ -275,10 +252,7 @@ mutation UpdateOrderStatus {
 # Mutation: Update Order Status to Shipped
 # ============================================================
 mutation ShipOrder {
-  updateOrderStatus(
-    id: "ord-004"
-    status: SHIPPED
-  ) {
+  updateOrderStatus(id: "ord-004", status: SHIPPED) {
     id
     status
     items {
@@ -293,10 +267,7 @@ mutation ShipOrder {
 # Mutation: Update Order Status to Delivered
 # ============================================================
 mutation DeliverOrder {
-  updateOrderStatus(
-    id: "ord-001"
-    status: DELIVERED
-  ) {
+  updateOrderStatus(id: "ord-001", status: DELIVERED) {
     id
     status
     updatedAt

@@ -191,12 +191,14 @@ subscription OrderUpdates {
 
 # Create a product and query with shipping
 mutation CreateProductThenQueryShipping {
-  createProduct(input: {
-    title: "Test Product with Shipping"
-    description: "Testing remote data integration"
-    price: 79.99
-    categoryIds: ["cat-001"]
-  }) {
+  createProduct(
+    input: {
+      title: "Test Product with Shipping"
+      description: "Testing remote data integration"
+      price: 79.99
+      categoryIds: ["cat-001"]
+    }
+  ) {
     ... on CreateProductSuccess {
       product {
         id

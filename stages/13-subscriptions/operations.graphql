@@ -57,12 +57,14 @@ mutation UpdateOrderStatus {
 
 # Trigger productCreated subscription by creating a product
 mutation CreateNewProduct {
-  createProduct(input: {
-    title: "New Wireless Headphones"
-    description: "Premium noise-cancelling headphones"
-    price: 29999
-    categoryIds: ["cat-001"]
-  }) {
+  createProduct(
+    input: {
+      title: "New Wireless Headphones"
+      description: "Premium noise-cancelling headphones"
+      price: 29999
+      categoryIds: ["cat-001"]
+    }
+  ) {
     ... on CreateProductSuccess {
       product {
         id

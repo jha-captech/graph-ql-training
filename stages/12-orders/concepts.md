@@ -38,11 +38,13 @@ Order history still shows:
 Why snapshot? Because the order represents a historical transaction. If the price changes later, the customer isn't retroactively charged more, and financial reports remain accurate.
 
 **What to snapshot:**
+
 - Prices (definitely)
 - Product titles (maybe—if you need to show what the customer thought they were buying)
 - Tax rates (if they can change)
 
 **What NOT to snapshot:**
+
 - Product IDs (they're immutable references)
 - User IDs (ditto)
 - Relationships (line items still point to the current Product record)
@@ -83,7 +85,7 @@ async function placeOrder(input, context) {
         orderId: order.id,
         productId: product.id,
         quantity: item.quantity,
-        unitPrice: product.price  // Snapshot
+        unitPrice: product.price, // Snapshot
       });
     }
     return order;
@@ -98,11 +100,13 @@ If any step fails (product not found, database error), the entire transaction ro
 ### Multi-Entity Mutations
 
 The `placeOrder` mutation touches three tables:
+
 1. **orders**: Create the order record
 2. **line_items**: Create one record per item
 3. **products**: Read current prices for snapshotting
 
 This is more complex than single-entity mutations like `createProduct`. It requires:
+
 - Transaction management
 - Validation across multiple entities
 - Consistent error handling (union errors or top-level errors?)
@@ -115,12 +119,13 @@ This is more complex than single-entity mutations like `createProduct`. It requi
 Order: {
   total: async (order, args, context) => {
     const items = await context.dataloaders.lineItemsByOrderId.load(order.id);
-    return items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  }
+    return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  };
 }
 ```
 
 **Trade-offs:**
+
 - **Compute on read**: Flexible, always accurate, but requires a query on every access
 - **Compute on write**: Store `total` in the `orders` table, update on every mutation
 - **Hybrid**: Store the total, recompute if stale (cached aggregate)
@@ -132,16 +137,19 @@ For this stage, compute on read. It's simpler and demonstrates resolver patterns
 Orders introduce multi-party authorization:
 
 **Buyers (CUSTOMER):**
+
 - Can place orders
 - Can view their own orders
 - Cannot view others' orders
 
 **Sellers:**
+
 - Can view orders that contain their products
 - Can update order status (e.g., mark as shipped) for their products' orders
 - Cannot place orders as others
 
 **Admins:**
+
 - Can view all orders
 - Can update any order status
 - Full visibility
@@ -151,6 +159,7 @@ This is more nuanced than "admin-only" or "owner-only" patterns from earlier sta
 ### The Product-Seller Relationship
 
 Stage 12 adds `Product.seller` (a `User`). This enables:
+
 - Sellers to filter products by ownership
 - Authorization checks (sellers can only update their own products)
 - Order authorization (sellers see orders containing their products)
@@ -183,12 +192,12 @@ Use your database client's transaction API:
 // Prisma example
 const order = await prisma.$transaction(async (tx) => {
   const order = await tx.order.create({
-    data: { buyerId: context.user.id, status: 'PENDING' }
+    data: { buyerId: context.user.id, status: "PENDING" },
   });
 
   for (const item of input.items) {
     const product = await tx.product.findUnique({
-      where: { id: item.productId }
+      where: { id: item.productId },
     });
     if (!product) throw new Error("Product not found");
 
@@ -197,8 +206,8 @@ const order = await prisma.$transaction(async (tx) => {
         orderId: order.id,
         productId: product.id,
         quantity: item.quantity,
-        unitPrice: product.price
-      }
+        unitPrice: product.price,
+      },
     });
   }
 

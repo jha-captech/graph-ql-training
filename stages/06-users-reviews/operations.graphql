@@ -229,12 +229,7 @@ mutation CreateReview {
 
 # Create a review without body (optional field)
 mutation CreateReviewWithoutBody {
-  createReview(
-    input: {
-      productId: "prod-005"
-      rating: 4
-    }
-  ) {
+  createReview(input: { productId: "prod-005", rating: 4 }) {
     review {
       id
       rating
@@ -251,12 +246,7 @@ mutation CreateReviewWithoutBody {
 
 # Create review and check updated average rating
 mutation CreateReviewAndCheckAverage {
-  createReview(
-    input: {
-      productId: "prod-001"
-      rating: 3
-    }
-  ) {
+  createReview(input: { productId: "prod-001", rating: 3 }) {
     review {
       id
       rating

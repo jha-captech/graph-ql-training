@@ -32,12 +32,7 @@ mutation CreateValidProduct {
 # Validation Error - Missing Title (Union Error Path)
 # ============================================================
 mutation CreateProductMissingTitle {
-  createProduct(
-    input: {
-      title: ""
-      price: 9999
-    }
-  ) {
+  createProduct(input: { title: "", price: 9999 }) {
     __typename
     ... on CreateProductSuccess {
       product {
@@ -57,12 +52,7 @@ mutation CreateProductMissingTitle {
 # Validation Error - Negative Price
 # ============================================================
 mutation CreateProductNegativePrice {
-  createProduct(
-    input: {
-      title: "Invalid Product"
-      price: -100
-    }
-  ) {
+  createProduct(input: { title: "Invalid Product", price: -100 }) {
     __typename
     ... on CreateProductSuccess {
       product {
@@ -140,48 +130,46 @@ query PartialSuccessQuery {
 # Multiple Mutations - Some Succeed, Some Fail
 # ============================================================
 mutation MultipleMutations {
-  first: createProduct(
-    input: {
-      title: "Valid Product 1"
-      price: 5000
-    }
-  ) {
+  first: createProduct(input: { title: "Valid Product 1", price: 5000 }) {
     __typename
     ... on CreateProductSuccess {
-      product { id title }
+      product {
+        id
+        title
+      }
     }
     ... on ValidationError {
-      message code
+      message
+      code
     }
   }
 
-  second: createProduct(
-    input: {
-      title: ""
-      price: 1000
-    }
-  ) {
+  second: createProduct(input: { title: "", price: 1000 }) {
     __typename
     ... on CreateProductSuccess {
-      product { id title }
+      product {
+        id
+        title
+      }
     }
     ... on ValidationError {
-      message field code
+      message
+      field
+      code
     }
   }
 
-  third: createProduct(
-    input: {
-      title: "Valid Product 2"
-      price: 7500
-    }
-  ) {
+  third: createProduct(input: { title: "Valid Product 2", price: 7500 }) {
     __typename
     ... on CreateProductSuccess {
-      product { id title }
+      product {
+        id
+        title
+      }
     }
     ... on ValidationError {
-      message code
+      message
+      code
     }
   }
 }
@@ -202,15 +190,12 @@ query TestNullPropagation {
 # Error Extensions - Checking Error Codes
 # ============================================================
 mutation CheckErrorCodes {
-  createProduct(
-    input: {
-      title: "x"
-      price: 0
-    }
-  ) {
+  createProduct(input: { title: "x", price: 0 }) {
     __typename
     ... on CreateProductSuccess {
-      product { id }
+      product {
+        id
+      }
     }
     ... on ValidationError {
       message
@@ -226,10 +211,7 @@ mutation CheckErrorCodes {
 mutation UpdateProductSuccess {
   updateProduct(
     id: "prod-001"
-    input: {
-      title: "Updated Title"
-      price: 15999
-    }
+    input: { title: "Updated Title", price: 15999 }
   ) {
     product {
       id
@@ -244,12 +226,7 @@ mutation UpdateProductSuccess {
 # Update Product - Non-Existent Product (Top-Level Error)
 # ============================================================
 mutation UpdateNonExistentProduct {
-  updateProduct(
-    id: "non-existent-product"
-    input: {
-      title: "New Title"
-    }
-  ) {
+  updateProduct(id: "non-existent-product", input: { title: "New Title" }) {
     product {
       id
       title
@@ -261,12 +238,7 @@ mutation UpdateNonExistentProduct {
 # Update Product - Validation Error in Update
 # ============================================================
 mutation UpdateProductInvalidData {
-  updateProduct(
-    id: "prod-001"
-    input: {
-      price: -500
-    }
-  ) {
+  updateProduct(id: "prod-001", input: { price: -500 }) {
     product {
       id
       title
@@ -317,11 +289,7 @@ query ComplexQueryWithErrors {
 # ============================================================
 mutation CreateReviewSuccess {
   createReview(
-    input: {
-      productId: "prod-002"
-      rating: 5
-      body: "Excellent product!"
-    }
+    input: { productId: "prod-002", rating: 5, body: "Excellent product!" }
   ) {
     review {
       id
@@ -341,13 +309,7 @@ mutation CreateReviewSuccess {
 # Review Creation - Validation Error (Invalid Rating)
 # ============================================================
 mutation CreateReviewInvalidRating {
-  createReview(
-    input: {
-      productId: "prod-001"
-      rating: 6
-      body: "Great!"
-    }
-  ) {
+  createReview(input: { productId: "prod-001", rating: 6, body: "Great!" }) {
     review {
       id
       rating
@@ -360,11 +322,7 @@ mutation CreateReviewInvalidRating {
 # ============================================================
 mutation CreateReviewNonExistentProduct {
   createReview(
-    input: {
-      productId: "invalid-product-id"
-      rating: 5
-      body: "Good"
-    }
+    input: { productId: "invalid-product-id", rating: 5, body: "Good" }
   ) {
     review {
       id
@@ -399,36 +357,45 @@ query IntrospectErrorTypes {
 # Test All Error Scenarios Together
 # ============================================================
 mutation TestAllErrorScenarios {
-  validProduct: createProduct(
-    input: {
-      title: "Valid Product"
-      price: 10000
-    }
-  ) {
+  validProduct: createProduct(input: { title: "Valid Product", price: 10000 }) {
     __typename
-    ... on CreateProductSuccess { product { id title } }
-    ... on ValidationError { message code }
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+      }
+    }
+    ... on ValidationError {
+      message
+      code
+    }
   }
 
-  missingTitle: createProduct(
-    input: {
-      title: ""
-      price: 5000
-    }
-  ) {
+  missingTitle: createProduct(input: { title: "", price: 5000 }) {
     __typename
-    ... on CreateProductSuccess { product { id } }
-    ... on ValidationError { message field code }
+    ... on CreateProductSuccess {
+      product {
+        id
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
   }
 
-  negativePrice: createProduct(
-    input: {
-      title: "Test"
-      price: -100
-    }
-  ) {
+  negativePrice: createProduct(input: { title: "Test", price: -100 }) {
     __typename
-    ... on CreateProductSuccess { product { id } }
-    ... on ValidationError { message field code }
+    ... on CreateProductSuccess {
+      product {
+        id
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
   }
 }
