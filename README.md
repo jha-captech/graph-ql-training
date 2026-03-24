@@ -14,10 +14,52 @@ Install these tools before starting:
 | [go-task](https://taskfile.dev/)                            | Task runner         | `brew install go-task`         |
 | [Mockoon CLI](https://mockoon.com/cli/) (stage 14+)         | External API mocks  | `bun install -g @mockoon/cli`  |
 
+## Getting Your Own Copy
+
+You need your own copy of this repository so you can commit your server implementation without affecting the shared curriculum. There are three options — pick whichever fits your situation.
+
+### Option 1: Use this template (recommended)
+
+This repository is set up as a GitHub template. Click the **"Use this template"** button at the top of the GitHub page to create a fresh copy under your own account in seconds. You get a clean repo with no fork relationship, which means:
+
+- No "X commits ahead/behind" noise in the GitHub UI
+- Your `main` branch starts clean with only the curriculum files
+- You can open pull requests within your own copy if you want code review
+
+After creating your copy (replace `<your-username>` with your GitHub username):
+```bash
+git clone https://github.com/<your-username>/graph-ql-training && cd graph-ql-training
+./setup.sh
+```
+
+### Option 2: Clone and push to a new remote
+
+If the template button isn't available, create a blank repo on GitHub (do **not** initialize it with a README), then (replace `<your-username>` with your GitHub username):
+
+```bash
+# Clone the original
+git clone https://github.com/jha-captech/graph-ql-training && cd graph-ql-training
+
+# Point origin at your new repo
+git remote set-url origin https://github.com/<your-username>/graph-ql-training
+
+# Push all branches and tags
+git push -u origin main
+
+# Continue with setup
+./setup.sh
+```
+
+### Option 3: Work on branches in the original repo
+
+If you have write access to this repo and don't need your own copy, the branch-based workflow described below works fine. Your `stage/*` branches are isolated from `main` — just never push server code to `main`.
+
+---
+
 ## Quick Start
 
 ```bash
-# 1. Clone the repo
+# 1. Clone the repo (or your copy from Option 1/2 above)
 git clone <repo-url> && cd graph-ql-training
 
 # 2. Run the setup script (checks prerequisites, creates .env, installs test runner)
