@@ -1,0 +1,366 @@
+# Sample Operations for Stage 15: Custom Scalars, Directives, and Schema Evolution
+# Use these queries to manually explore typed scalars and schema evolution
+
+# ============================================================
+# QUERIES WITH CUSTOM SCALARS
+# ============================================================
+
+# Query product with new Pricing type (evolved from deprecated price field)
+query ProductWithPricing {
+  product(id: "prod-001") {
+    id
+    title
+    price  # Deprecated - still works but marked as deprecated
+    pricing {
+      amount
+      currency
+      compareAtAmount
+    }
+  }
+}
+
+# Query user with EmailAddress and DateTime scalars
+query UserWithTypedFields {
+  user(id: "user-001") {
+    id
+    name
+    email  # Now EmailAddress! scalar
+    role
+    createdAt  # Now DateTime! scalar
+    updatedAt  # Now DateTime! scalar
+  }
+}
+
+# Query product with all typed timestamp fields
+query ProductTimestamps {
+  product(id: "prod-001") {
+    id
+    title
+    createdAt  # DateTime! scalar
+    updatedAt  # DateTime! scalar
+    pricing {
+      amount  # Money! scalar
+      currency
+    }
+  }
+}
+
+# Query with nested types showing scalar usage
+query OrderWithTypedFields {
+  order(id: "ord-001") {
+    id
+    buyer {
+      name
+      email  # EmailAddress!
+      createdAt  # DateTime!
+    }
+    items {
+      product {
+        title
+        pricing {
+          amount  # Money!
+          currency
+        }
+      }
+      quantity
+      unitPrice  # Still Float (not everything needs to be Money)
+    }
+    createdAt  # DateTime!
+    updatedAt  # DateTime!
+  }
+}
+
+# ============================================================
+# QUERIES WITH DIRECTIVES
+# ============================================================
+
+# Query with @auth directive (admin-only)
+query AdminOnlyUsers {
+  users {  # Has @auth(requires: ADMIN) directive
+    id
+    name
+    email
+    role
+  }
+}
+
+# Query with @cacheControl directive
+query ProductWithCacheControl {
+  product(id: "prod-001") {
+    id
+    title
+    shippingEstimate(zipCode: "10001") {  # Has @cacheControl(maxAge: 3600)
+      provider
+      days
+      cost
+    }
+  }
+}
+
+# ============================================================
+# INTROSPECTION - DISCOVERING DEPRECATION
+# ============================================================
+
+# Discover deprecated fields
+query DeprecatedFields {
+  __type(name: "Product") {
+    fields(includeDeprecated: true) {
+      name
+      isDeprecated
+      deprecationReason
+      type {
+        name
+        kind
+      }
+    }
+  }
+}
+
+# Check custom scalar definitions
+query CustomScalars {
+  __type(name: "DateTime") {
+    name
+    kind
+    description
+  }
+  __type(name: "Money") {
+    name
+    kind
+    description
+  }
+  __type(name: "EmailAddress") {
+    name
+    kind
+    description
+  }
+}
+
+# ============================================================
+# MUTATIONS WITH CUSTOM SCALARS
+# ============================================================
+
+# Create review with authenticated user (EmailAddress scalar used internally)
+mutation CreateReviewWithTypedUser {
+  createReview(input: {
+    productId: "prod-001"
+    rating: 5
+    body: "Testing custom scalars!"
+  }) {
+    review {
+      id
+      rating
+      body
+      author {
+        name
+        email  # EmailAddress!
+      }
+      createdAt  # DateTime!
+    }
+  }
+}
+
+# Create product - price input is Float, but stored/returned as Money
+mutation CreateProductWithPricing {
+  createProduct(input: {
+    title: "Test Product with Pricing"
+    description: "Testing Money scalar"
+    price: 129.99  # Input as float
+    categoryIds: ["cat-001"]
+  }) {
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+        price  # Deprecated Float! field
+        pricing {
+          amount  # Money! scalar (should be 129.99)
+          currency
+        }
+        createdAt  # DateTime!
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# TESTING VALIDATION WITH CUSTOM SCALARS
+# ============================================================
+
+# Query using variables with custom scalars
+query ProductsSince($since: DateTime!) {
+  productsConnection(first: 10) {
+    edges {
+      node {
+        id
+        title
+        createdAt
+        pricing {
+          amount
+          currency
+        }
+      }
+    }
+  }
+}
+
+# Variables:
+# {
+#   "since": "2024-01-01T00:00:00Z"
+# }
+
+# ============================================================
+# SCHEMA EVOLUTION - OLD VS NEW PATTERNS
+# ============================================================
+
+# Old pattern (still works due to backwards compatibility)
+query OldPricePattern {
+  product(id: "prod-001") {
+    id
+    title
+    price  # Deprecated but functional
+  }
+}
+
+# New pattern (structured pricing)
+query NewPricingPattern {
+  product(id: "prod-001") {
+    id
+    title
+    pricing {
+      amount
+      currency
+      compareAtAmount  # New field for sale/discount display
+    }
+  }
+}
+
+# Side-by-side comparison
+query CompareOldAndNew {
+  product(id: "prod-001") {
+    id
+    title
+    oldPrice: price  # Alias for comparison
+    pricing {
+      amount
+      currency
+      compareAtAmount
+    }
+  }
+}
+
+# ============================================================
+# PAGINATION WITH CUSTOM SCALARS
+# ============================================================
+
+query ProductsConnectionWithTypedFields {
+  productsConnection(first: 5) {
+    edges {
+      node {
+        id
+        title
+        pricing {
+          amount  # Money!
+          currency
+        }
+        createdAt  # DateTime!
+        updatedAt  # DateTime!
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# ============================================================
+# TESTING AUTHORIZATION DIRECTIVES
+# ============================================================
+
+# This query should fail for non-admin users
+query AdminOnlyQuery {
+  users {  # @auth(requires: ADMIN)
+    id
+    name
+    email
+    role
+  }
+}
+
+# This query should work for authenticated users
+query AuthenticatedUserQuery {
+  me {
+    id
+    name
+    email  # EmailAddress!
+    createdAt  # DateTime!
+  }
+}
+
+# ============================================================
+# SUBSCRIPTION WITH CUSTOM SCALARS
+# ============================================================
+
+subscription OrderUpdatesWithTypedFields {
+  orderStatusChanged(orderId: "ord-001") {
+    id
+    status
+    buyer {
+      email  # EmailAddress!
+      createdAt  # DateTime!
+    }
+    updatedAt  # DateTime!
+  }
+}
+
+# ============================================================
+# COMPLEX QUERY TESTING EVERYTHING
+# ============================================================
+
+query CompleteTypedQuery {
+  me {
+    id
+    name
+    email  # EmailAddress!
+    createdAt  # DateTime!
+  }
+  product(id: "prod-001") {
+    id
+    title
+    pricing {
+      amount  # Money!
+      currency
+      compareAtAmount  # Money (nullable)
+    }
+    reviews {
+      rating
+      author {
+        email  # EmailAddress!
+      }
+      createdAt  # DateTime!
+    }
+    shippingEstimate(zipCode: "10001") {  # @cacheControl
+      provider
+      days
+      cost
+    }
+  }
+}
+
+# ============================================================
+# TESTING WORKFLOW
+# ============================================================
+#
+# 1. Compare old `price` field with new `pricing` type
+# 2. Verify DateTime fields return ISO 8601 format
+# 3. Test that EmailAddress validation works on input
+# 4. Try accessing admin-only fields with different roles
+# 5. Check introspection for deprecation notices
+# 6. Test Money scalar precision (no floating-point errors)
+#
+# ============================================================

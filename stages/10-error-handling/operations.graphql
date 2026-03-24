@@ -1,0 +1,434 @@
+# Sample operations for manual exploration of Stage 10: Error Handling
+
+# ============================================================
+# Successful Product Creation (Union Success Path)
+# ============================================================
+mutation CreateValidProduct {
+  createProduct(
+    input: {
+      title: "Test Product"
+      description: "A valid test product"
+      price: 9999
+      categoryIds: ["cat-001"]
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+        price
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Validation Error - Missing Title (Union Error Path)
+# ============================================================
+mutation CreateProductMissingTitle {
+  createProduct(
+    input: {
+      title: ""
+      price: 9999
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Validation Error - Negative Price
+# ============================================================
+mutation CreateProductNegativePrice {
+  createProduct(
+    input: {
+      title: "Invalid Product"
+      price: -100
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+        price
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Validation Error - Invalid Category ID
+# ============================================================
+mutation CreateProductInvalidCategory {
+  createProduct(
+    input: {
+      title: "Test Product"
+      price: 9999
+      categoryIds: ["invalid-category-id"]
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Top-Level Error - Query Non-Existent Product
+# ============================================================
+query QueryNonExistentProduct {
+  product(id: "non-existent-id") {
+    id
+    title
+    price
+  }
+}
+
+# ============================================================
+# Partial Success - One Field Succeeds, One Fails
+# ============================================================
+query PartialSuccessQuery {
+  validProduct: product(id: "prod-001") {
+    id
+    title
+    price
+  }
+  invalidProduct: product(id: "invalid-id") {
+    id
+    title
+    price
+  }
+  categories {
+    id
+    name
+  }
+}
+
+# ============================================================
+# Multiple Mutations - Some Succeed, Some Fail
+# ============================================================
+mutation MultipleMutations {
+  first: createProduct(
+    input: {
+      title: "Valid Product 1"
+      price: 5000
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product { id title }
+    }
+    ... on ValidationError {
+      message code
+    }
+  }
+
+  second: createProduct(
+    input: {
+      title: ""
+      price: 1000
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product { id title }
+    }
+    ... on ValidationError {
+      message field code
+    }
+  }
+
+  third: createProduct(
+    input: {
+      title: "Valid Product 2"
+      price: 7500
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product { id title }
+    }
+    ... on ValidationError {
+      message code
+    }
+  }
+}
+
+# ============================================================
+# Null Propagation - Non-Null Field Error
+# ============================================================
+query TestNullPropagation {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    description
+  }
+}
+
+# ============================================================
+# Error Extensions - Checking Error Codes
+# ============================================================
+mutation CheckErrorCodes {
+  createProduct(
+    input: {
+      title: "x"
+      price: 0
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product { id }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Update Product - Successful Update
+# ============================================================
+mutation UpdateProductSuccess {
+  updateProduct(
+    id: "prod-001"
+    input: {
+      title: "Updated Title"
+      price: 15999
+    }
+  ) {
+    product {
+      id
+      title
+      price
+      updatedAt
+    }
+  }
+}
+
+# ============================================================
+# Update Product - Non-Existent Product (Top-Level Error)
+# ============================================================
+mutation UpdateNonExistentProduct {
+  updateProduct(
+    id: "non-existent-product"
+    input: {
+      title: "New Title"
+    }
+  ) {
+    product {
+      id
+      title
+    }
+  }
+}
+
+# ============================================================
+# Update Product - Validation Error in Update
+# ============================================================
+mutation UpdateProductInvalidData {
+  updateProduct(
+    id: "prod-001"
+    input: {
+      price: -500
+    }
+  ) {
+    product {
+      id
+      title
+      price
+    }
+  }
+}
+
+# ============================================================
+# Complex Query with Multiple Error Points
+# ============================================================
+query ComplexQueryWithErrors {
+  product1: product(id: "prod-001") {
+    id
+    title
+    price
+    categories {
+      name
+    }
+  }
+
+  product2: product(id: "invalid") {
+    id
+    title
+  }
+
+  products {
+    id
+  }
+
+  user(id: "user-001") {
+    name
+    reviews {
+      rating
+      product {
+        title
+      }
+    }
+  }
+
+  invalidUser: user(id: "invalid-user") {
+    name
+  }
+}
+
+# ============================================================
+# Review Creation - Successful
+# ============================================================
+mutation CreateReviewSuccess {
+  createReview(
+    input: {
+      productId: "prod-002"
+      rating: 5
+      body: "Excellent product!"
+    }
+  ) {
+    review {
+      id
+      rating
+      body
+      author {
+        name
+      }
+      product {
+        title
+      }
+    }
+  }
+}
+
+# ============================================================
+# Review Creation - Validation Error (Invalid Rating)
+# ============================================================
+mutation CreateReviewInvalidRating {
+  createReview(
+    input: {
+      productId: "prod-001"
+      rating: 6
+      body: "Great!"
+    }
+  ) {
+    review {
+      id
+      rating
+    }
+  }
+}
+
+# ============================================================
+# Review Creation - Non-Existent Product
+# ============================================================
+mutation CreateReviewNonExistentProduct {
+  createReview(
+    input: {
+      productId: "invalid-product-id"
+      rating: 5
+      body: "Good"
+    }
+  ) {
+    review {
+      id
+    }
+  }
+}
+
+# ============================================================
+# Introspection of Error Types
+# ============================================================
+query IntrospectErrorTypes {
+  __type(name: "CreateProductResult") {
+    kind
+    possibleTypes {
+      name
+    }
+  }
+
+  __type(name: "ValidationError") {
+    kind
+    fields {
+      name
+      type {
+        name
+        kind
+      }
+    }
+  }
+}
+
+# ============================================================
+# Test All Error Scenarios Together
+# ============================================================
+mutation TestAllErrorScenarios {
+  validProduct: createProduct(
+    input: {
+      title: "Valid Product"
+      price: 10000
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess { product { id title } }
+    ... on ValidationError { message code }
+  }
+
+  missingTitle: createProduct(
+    input: {
+      title: ""
+      price: 5000
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess { product { id } }
+    ... on ValidationError { message field code }
+  }
+
+  negativePrice: createProduct(
+    input: {
+      title: "Test"
+      price: -100
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess { product { id } }
+    ... on ValidationError { message field code }
+  }
+}

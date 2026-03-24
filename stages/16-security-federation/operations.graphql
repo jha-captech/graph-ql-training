@@ -1,0 +1,490 @@
+# Stage 16: Security & Federation Operations
+# This file contains example operations for testing security measures
+# and demonstrating federation concepts.
+
+# ============================================================================
+# SAFE QUERIES: These should work
+# ============================================================================
+
+# Normal depth query (depth: 4)
+query SafeQuery {
+  product(id: "prod-001") {
+    id
+    title
+    pricing {
+      amount
+      currency
+    }
+    seller {
+      name
+      email
+    }
+  }
+}
+
+# Medium depth query (depth: 5)
+query MediumDepthQuery {
+  order(id: "order-001") {
+    id
+    buyer {
+      name
+      reviews {
+        rating
+        product {
+          title
+        }
+      }
+    }
+  }
+}
+
+# Wide query with reasonable complexity
+query WideQuery {
+  productsConnection(first: 10) {
+    edges {
+      node {
+        id
+        title
+        pricing {
+          amount
+          currency
+        }
+        categories {
+          name
+        }
+        seller {
+          name
+        }
+      }
+    }
+  }
+}
+
+# ============================================================================
+# DANGEROUS QUERIES: These should be rejected
+# ============================================================================
+
+# Deeply nested query (depth: 11)
+# This exceeds typical depth limit of 7-10
+query DeeplyNestedQuery {
+  product(id: "prod-001") {
+    seller {
+      reviews {
+        product {
+          seller {
+            reviews {
+              product {
+                seller {
+                  reviews {
+                    product {
+                      seller {
+                        name  # depth: 11
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# Circular query exploiting relationships
+query CircularQuery {
+  user(id: "user-001") {
+    reviews {
+      product {
+        reviews {
+          author {
+            reviews {
+              product {
+                reviews {
+                  author {
+                    reviews {
+                      product {
+                        reviews {
+                          author {
+                            name  # Very deep nesting
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# High complexity query (many fields, large lists)
+query HighComplexityQuery {
+  productsConnection(first: 100) {
+    edges {
+      node {
+        id
+        title
+        description
+        pricing {
+          amount
+          currency
+          compareAtAmount
+        }
+        categories {
+          id
+          name
+          products {
+            id
+            title
+            pricing {
+              amount
+            }
+          }
+        }
+        reviews {
+          id
+          rating
+          body
+          author {
+            id
+            name
+            email
+            reviews {
+              rating
+              product {
+                title
+              }
+            }
+          }
+        }
+        seller {
+          name
+          email
+          reviews {
+            rating
+          }
+        }
+        shippingEstimate(zipCode: "10001") {
+          provider
+          days
+          cost
+        }
+      }
+    }
+  }
+}
+
+# Batch query that could fetch too much data
+query BatchQuery {
+  p1: product(id: "prod-001") { ...ProductDetails }
+  p2: product(id: "prod-002") { ...ProductDetails }
+  p3: product(id: "prod-003") { ...ProductDetails }
+  p4: product(id: "prod-004") { ...ProductDetails }
+  p5: product(id: "prod-005") { ...ProductDetails }
+  p6: product(id: "prod-006") { ...ProductDetails }
+  p7: product(id: "prod-007") { ...ProductDetails }
+  p8: product(id: "prod-008") { ...ProductDetails }
+  p9: product(id: "prod-009") { ...ProductDetails }
+  p10: product(id: "prod-010") { ...ProductDetails }
+  # ... could continue for 100+ fields
+}
+
+fragment ProductDetails on Product {
+  id
+  title
+  pricing {
+    amount
+    currency
+  }
+  reviews {
+    rating
+    author {
+      name
+      reviews {
+        rating
+      }
+    }
+  }
+  categories {
+    products {
+      title
+    }
+  }
+}
+
+# ============================================================================
+# FEDERATION QUERIES: Introspection
+# ============================================================================
+
+# Query the _service field (federation introspection)
+query GetSubgraphSchema {
+  _service {
+    sdl
+  }
+}
+
+# Query entity type definitions
+query GetEntityTypes {
+  __schema {
+    types {
+      name
+      kind
+      fields {
+        name
+      }
+    }
+  }
+}
+
+# Check for federation directives
+query CheckFederationDirectives {
+  __schema {
+    directives {
+      name
+      locations
+      args {
+        name
+        type {
+          name
+        }
+      }
+    }
+  }
+}
+
+# ============================================================================
+# PERSISTED QUERIES: Example usage
+# ============================================================================
+
+# Instead of sending full query, client sends:
+# {
+#   "extensions": {
+#     "persistedQuery": {
+#       "version": 1,
+#       "sha256Hash": "ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"
+#     }
+#   }
+# }
+#
+# This matches the hash of:
+query GetProductBasic {
+  product(id: "prod-001") {
+    id
+    title
+    pricing {
+      amount
+      currency
+    }
+  }
+}
+
+# ============================================================================
+# RATE LIMITING TESTS: Multiple requests
+# ============================================================================
+
+# Simple query for rate limit testing
+query QuickQuery {
+  me {
+    id
+    name
+  }
+}
+
+# Another simple query
+query QuickProductQuery {
+  product(id: "prod-001") {
+    title
+  }
+}
+
+# ============================================================================
+# FEDERATION CONCEPTS: Entity resolution examples
+# ============================================================================
+
+# How a subgraph might resolve entity references
+# (This is conceptual - actual _entities queries are internal to the gateway)
+#
+# The gateway would call:
+# query($_representations: [_Any!]!) {
+#   _entities(representations: $_representations) {
+#     ... on Product {
+#       id
+#       title
+#       pricing {
+#         amount
+#       }
+#     }
+#     ... on User {
+#       id
+#       name
+#       email
+#     }
+#   }
+# }
+#
+# With variables:
+# {
+#   "_representations": [
+#     { "__typename": "Product", "id": "prod-001" },
+#     { "__typename": "User", "id": "user-001" }
+#   ]
+# }
+
+# ============================================================================
+# VALID COMPLEX QUERIES: Should pass complexity checks
+# ============================================================================
+
+# Complex but optimized query
+query OptimizedComplexQuery {
+  productsConnection(first: 5) {
+    edges {
+      node {
+        id
+        title
+        pricing {
+          amount
+          currency
+        }
+        averageRating
+        seller {
+          name
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# Query with variables for pagination
+query PaginatedProducts($first: Int!, $after: String) {
+  productsConnection(first: $first, after: $after) {
+    edges {
+      node {
+        id
+        title
+        pricing {
+          amount
+          currency
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# Query combining multiple root fields safely
+query DashboardQuery {
+  me {
+    id
+    name
+    email
+    role
+  }
+
+  recentOrders: orders {
+    id
+    status
+    total
+    createdAt
+  }
+
+  featuredProducts: productsConnection(first: 5) {
+    edges {
+      node {
+        id
+        title
+        pricing {
+          amount
+          currency
+        }
+      }
+    }
+  }
+}
+
+# ============================================================================
+# TIMEOUT TESTS: Long-running operations
+# ============================================================================
+
+# Query that might trigger timeout with large dataset
+query LargeDatasetQuery {
+  productsConnection(first: 100) {
+    edges {
+      node {
+        id
+        title
+        reviews {
+          id
+          rating
+          body
+          createdAt
+        }
+      }
+    }
+    totalCount
+  }
+}
+
+# ============================================================================
+# SECURITY TESTS: Auth + Complexity
+# ============================================================================
+
+# Requires ADMIN role + within complexity limits
+query SecureAdminQuery {
+  users {
+    id
+    name
+    email
+    role
+    createdAt
+  }
+}
+
+# Authenticated query with moderate complexity
+query AuthenticatedUserQuery {
+  me {
+    id
+    name
+    email
+    reviews {
+      id
+      rating
+      product {
+        title
+        pricing {
+          amount
+        }
+      }
+      createdAt
+    }
+  }
+
+  orders {
+    id
+    status
+    total
+    items {
+      product {
+        title
+      }
+      quantity
+      unitPrice
+    }
+  }
+}

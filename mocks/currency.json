@@ -1,0 +1,120 @@
+{
+  "uuid": "l9o4n6p2-5p3m-4l0n-9o4p-2q7l8m9n0p1k",
+  "lastMigration": 32,
+  "name": "Currency Conversion API",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 4012,
+  "hostname": "0.0.0.0",
+  "routes": [
+    {
+      "uuid": "m0p5o7q3-6q4n-5m1o-0p5q-3r8m9n0o1q2l",
+      "type": "http",
+      "documentation": "Currency rates endpoint",
+      "method": "get",
+      "endpoint": "rates",
+      "responses": [
+        {
+          "uuid": "n1q6p8r4-7r5o-6n2p-1q6r-4s9n0o1p2r3m",
+          "body": "{ \"error\": \"Unknown currency\" }",
+          "latency": 0,
+          "statusCode": 400,
+          "label": "Error - Invalid currency",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "base",
+              "value": "INVALID",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "o2r7q9s5-8s6p-7o3q-2r7s-5t0o1p2q3s4n",
+          "body": "{ \"base\": \"USD\", \"rates\": { \"EUR\": 0.92, \"GBP\": 0.79, \"JPY\": 149.50, \"CAD\": 1.36 } }",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success - USD",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "query",
+              "modifier": "base",
+              "value": "USD",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id"
+        },
+        {
+          "uuid": "p3s8r0t6-9t7q-8p4r-3s8t-6u1p2q3r4t5o",
+          "body": "{ \"base\": \"USD\", \"rates\": { \"EUR\": 0.92, \"GBP\": 0.79, \"JPY\": 149.50, \"CAD\": 1.36 } }",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success - Default",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id"
+        }
+      ],
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "m0p5o7q3-6q4n-5m1o-0p5q-3r8m9n0o1q2l"
+    }
+  ],
+  "folders": [],
+  "proxyMode": false,
+  "proxyHost": "",
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
+  "data": [],
+  "callbacks": [],
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  }
+}

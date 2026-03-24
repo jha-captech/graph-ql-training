@@ -1,0 +1,288 @@
+# Stage 04: Mutations and Input Types - Sample Operations
+
+# Create a new product with minimal fields
+mutation CreateBasicProduct {
+  createProduct(input: {
+    title: "Ergonomic Mouse Pad"
+    price: 1999
+  }) {
+    product {
+      id
+      title
+      price
+      status
+    }
+  }
+}
+
+# Create a product with all fields including description
+mutation CreateProductWithDescription {
+  createProduct(input: {
+    title: "USB-C Hub"
+    description: "7-in-1 USB-C hub with HDMI, USB 3.0, and SD card reader"
+    price: 3999
+  }) {
+    product {
+      id
+      title
+      description
+      price
+      inStock
+      status
+    }
+  }
+}
+
+# Create a product and link it to categories
+mutation CreateProductWithCategories {
+  createProduct(input: {
+    title: "Wireless Charger"
+    description: "Fast wireless charging pad for phones"
+    price: 2499
+    categoryIds: ["cat-001", "cat-004"]
+  }) {
+    product {
+      id
+      title
+      price
+      categories {
+        id
+        name
+      }
+    }
+  }
+}
+
+# Create product using variables (best practice)
+mutation CreateProduct($input: CreateProductInput!) {
+  createProduct(input: $input) {
+    product {
+      id
+      title
+      description
+      price
+      inStock
+      status
+      categories {
+        id
+        name
+      }
+    }
+  }
+}
+# Variables:
+# {
+#   "input": {
+#     "title": "Laptop Stand",
+#     "description": "Adjustable aluminum laptop stand",
+#     "price": 4999,
+#     "categoryIds": ["cat-002"]
+#   }
+# }
+
+# Update a product's title and price
+mutation UpdateProductBasic {
+  updateProduct(id: "prod-001", input: {
+    title: "Premium Mechanical Keyboard"
+    price: 14999
+  }) {
+    product {
+      id
+      title
+      price
+      description
+    }
+  }
+}
+
+# Update only the product status
+mutation UpdateProductStatus {
+  updateProduct(id: "prod-008", input: {
+    status: ACTIVE
+  }) {
+    product {
+      id
+      title
+      status
+    }
+  }
+}
+
+# Update product description to null (clearing it)
+mutation ClearProductDescription {
+  updateProduct(id: "prod-002", input: {
+    description: null
+  }) {
+    product {
+      id
+      title
+      description
+    }
+  }
+}
+
+# Update a product with variables
+mutation UpdateProduct($id: ID!, $input: UpdateProductInput!) {
+  updateProduct(id: $id, input: $input) {
+    product {
+      id
+      title
+      description
+      price
+      status
+      categories {
+        id
+        name
+      }
+    }
+  }
+}
+# Variables:
+# {
+#   "id": "prod-001",
+#   "input": {
+#     "title": "Updated Title",
+#     "price": 9999,
+#     "status": "ACTIVE"
+#   }
+# }
+
+# Multiple mutations in sequence (executed serially)
+mutation CreateAndUpdateProducts {
+  create: createProduct(input: {
+    title: "New Product"
+    price: 5999
+  }) {
+    product {
+      id
+      title
+    }
+  }
+  update: updateProduct(id: "prod-001", input: {
+    status: ARCHIVED
+  }) {
+    product {
+      id
+      status
+    }
+  }
+}
+
+# Create product then immediately query it with relationships
+mutation CreateProductAndQueryRelationships {
+  createProduct(input: {
+    title: "Bluetooth Speaker"
+    description: "Portable wireless speaker with 10-hour battery"
+    price: 6999
+    categoryIds: ["cat-001"]
+  }) {
+    product {
+      id
+      title
+      description
+      price
+      categories {
+        id
+        name
+        products {
+          id
+          title
+        }
+      }
+    }
+  }
+}
+
+# Update a product and return all fields
+mutation UpdateProductComplete {
+  updateProduct(id: "prod-002", input: {
+    title: "Updated Wireless Mouse"
+    description: "Ergonomic wireless mouse with programmable buttons"
+    price: 5499
+    status: ACTIVE
+  }) {
+    product {
+      id
+      title
+      description
+      price
+      inStock
+      status
+      categories {
+        id
+        name
+      }
+    }
+  }
+}
+
+# Try to update a non-existent product (should return null or error)
+mutation UpdateNonExistentProduct {
+  updateProduct(id: "does-not-exist", input: {
+    title: "This should fail"
+  }) {
+    product {
+      id
+      title
+    }
+  }
+}
+
+# Create multiple products in sequence
+mutation CreateMultipleProducts {
+  first: createProduct(input: {
+    title: "Product One"
+    price: 1000
+  }) {
+    product {
+      id
+      title
+    }
+  }
+  second: createProduct(input: {
+    title: "Product Two"
+    price: 2000
+  }) {
+    product {
+      id
+      title
+    }
+  }
+  third: createProduct(input: {
+    title: "Product Three"
+    price: 3000
+  }) {
+    product {
+      id
+      title
+    }
+  }
+}
+
+# Create product with minimal response (only ID)
+mutation CreateProductMinimalResponse {
+  createProduct(input: {
+    title: "Minimal Response Product"
+    price: 999
+  }) {
+    product {
+      id
+    }
+  }
+}
+
+# Query to verify mutation worked
+query VerifyProductCreated($id: ID!) {
+  product(id: $id) {
+    id
+    title
+    description
+    price
+    inStock
+    status
+    categories {
+      id
+      name
+    }
+  }
+}

@@ -1,0 +1,199 @@
+# Stage 03: Relationships - Sample Operations
+
+# Query all categories
+query GetAllCategories {
+  categories {
+    id
+    name
+  }
+}
+
+# Query a single category by ID
+query GetCategory {
+  category(id: "cat-001") {
+    id
+    name
+  }
+}
+
+# Query a category with its products (1-to-many)
+query GetCategoryWithProducts {
+  category(id: "cat-001") {
+    id
+    name
+    products {
+      id
+      title
+      price
+    }
+  }
+}
+
+# Query a product with its categories (many-to-many)
+query GetProductWithCategories {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    categories {
+      id
+      name
+    }
+  }
+}
+
+# Query all products with their categories
+# This demonstrates the N+1 problem - notice how many DB queries this generates
+query GetAllProductsWithCategories {
+  products {
+    id
+    title
+    price
+    categories {
+      id
+      name
+    }
+  }
+}
+
+# Nested traversal: product -> categories -> products
+# This shows how GraphQL can traverse the relationship graph in any direction
+query NestedTraversal {
+  product(id: "prod-001") {
+    title
+    categories {
+      name
+      products {
+        id
+        title
+        price
+      }
+    }
+  }
+}
+
+# Deep nesting: category -> products -> categories -> products
+# GraphQL allows arbitrary nesting (though you'll want to limit this in production)
+query DeepNesting {
+  category(id: "cat-001") {
+    name
+    products {
+      title
+      categories {
+        name
+        products {
+          title
+        }
+      }
+    }
+  }
+}
+
+# Query with variables for category
+query GetCategoryById($categoryId: ID!) {
+  category(id: $categoryId) {
+    id
+    name
+    products {
+      id
+      title
+      price
+      status
+    }
+  }
+}
+# Variables: { "categoryId": "cat-001" }
+
+# Multiple queries with aliases
+query GetMultipleCategoriesAndProducts {
+  electronics: category(id: "cat-001") {
+    name
+    products {
+      title
+    }
+  }
+  homeOffice: category(id: "cat-002") {
+    name
+    products {
+      title
+    }
+  }
+  keyboard: product(id: "prod-001") {
+    title
+    categories {
+      name
+    }
+  }
+}
+
+# Query products with selective category fields
+query GetProductsWithCategoryNames {
+  products {
+    title
+    categories {
+      name  # Only fetch the name, not the id
+    }
+  }
+}
+
+# Check for empty relationships
+# prod-008 might belong to multiple categories
+query GetProductCategories {
+  product(id: "prod-008") {
+    id
+    title
+    categories {
+      id
+      name
+    }
+  }
+}
+
+# Introspection: Check Product.categories field type
+query IntrospectProductCategories {
+  __type(name: "Product") {
+    fields {
+      name
+      type {
+        kind
+        ofType {
+          kind
+          ofType {
+            name
+          }
+        }
+      }
+    }
+  }
+}
+
+# Fragment for reusable category fields
+query GetProductsWithCategoryFragment {
+  products {
+    id
+    title
+    categories {
+      ...CategoryFields
+    }
+  }
+}
+
+fragment CategoryFields on Category {
+  id
+  name
+}
+
+# Query categories first, then their products
+# This is the inverse direction from the previous queries
+query GetCategoriesWithProducts {
+  categories {
+    id
+    name
+    products {
+      id
+      title
+      price
+      status
+    }
+  }
+}

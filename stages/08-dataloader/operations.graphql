@@ -1,0 +1,360 @@
+# Sample operations for exploring Stage 08 - DataLoader
+# These are NOT part of the test suite — use them manually with GraphiQL or Postman
+
+# --------------------------------------------------
+# QUERIES THAT TRIGGER N+1 (Before DataLoader)
+# --------------------------------------------------
+
+# This query fetches 50+ products, then reviews for each, then authors for each review
+# Without DataLoader: 1 + 50 + ~200 = ~251 queries
+# With DataLoader: 3 queries (products, reviews batch, authors batch)
+query GetAllProductsWithReviewsAndAuthors {
+  products {
+    id
+    title
+    price
+    reviews {
+      id
+      rating
+      body
+      author {
+        id
+        name
+        email
+      }
+    }
+  }
+}
+
+# Products with categories - triggers N+1 on categories
+# Without DataLoader: 1 + 50 queries
+# With DataLoader: 2 queries
+query GetProductsWithCategories {
+  products {
+    id
+    title
+    categories {
+      id
+      name
+    }
+  }
+}
+
+# Nested traversal: products -> reviews -> author -> reviews -> product
+# Extreme N+1 without DataLoader
+query DeepNesting {
+  products {
+    id
+    title
+    reviews {
+      id
+      rating
+      author {
+        id
+        name
+        reviews {
+          id
+          product {
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# QUERIES THAT BENEFIT FROM CACHING (Same Request)
+# --------------------------------------------------
+
+# Same category appears multiple times - should be fetched once
+query ProductsInSameCategory {
+  products {
+    id
+    title
+    categories {
+      id
+      name
+      products {
+        id
+        title
+      }
+    }
+  }
+}
+
+# Same author appears multiple times
+query ReviewsFromSameAuthors {
+  products {
+    id
+    reviews {
+      id
+      author {
+        id
+        name
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# SPECIFIC PRODUCT QUERIES
+# --------------------------------------------------
+
+# Single product with relationships (should still use DataLoader)
+query GetProductWithRelationships {
+  product(id: "prod-001") {
+    id
+    title
+    categories {
+      id
+      name
+    }
+    reviews {
+      id
+      rating
+      author {
+        name
+      }
+    }
+  }
+}
+
+# Multiple products with aliases
+query GetMultipleProductsEfficiently {
+  first: product(id: "prod-001") {
+    id
+    title
+    reviews {
+      author {
+        name
+      }
+    }
+  }
+  second: product(id: "prod-002") {
+    id
+    title
+    reviews {
+      author {
+        name
+      }
+    }
+  }
+  third: product(id: "prod-005") {
+    id
+    title
+    reviews {
+      author {
+        name
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# USER QUERIES WITH RELATIONSHIPS
+# --------------------------------------------------
+
+# Users with their reviews and products
+query GetUsersWithReviewsAndProducts {
+  users {
+    id
+    name
+    reviews {
+      id
+      rating
+      product {
+        id
+        title
+        categories {
+          name
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# SEARCH QUERIES (Union types with DataLoader)
+# --------------------------------------------------
+
+query SearchWithRelationships {
+  search(term: "test") {
+    __typename
+    ... on Product {
+      id
+      title
+      categories {
+        name
+      }
+      reviews {
+        rating
+        author {
+          name
+        }
+      }
+    }
+    ... on User {
+      id
+      name
+      reviews {
+        rating
+        product {
+          title
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# NODE QUERIES (Testing DataLoader with interfaces)
+# --------------------------------------------------
+
+query GetNodeWithRelationships {
+  node(id: "prod-001") {
+    id
+    ... on Product {
+      title
+      categories {
+        id
+        name
+      }
+      reviews {
+        rating
+        author {
+          name
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# PERFORMANCE TEST QUERIES
+# --------------------------------------------------
+
+# Large query to test DataLoader effectiveness
+# Should complete in < 500ms with DataLoader
+# Would timeout without DataLoader
+query PerformanceTest {
+  products {
+    id
+    title
+    price
+    averageRating
+    categories {
+      id
+      name
+    }
+    reviews {
+      id
+      rating
+      body
+      author {
+        id
+        name
+        email
+        reviews {
+          id
+          rating
+        }
+      }
+      product {
+        id
+        title
+      }
+    }
+  }
+}
+
+# Another performance test with different entry point
+query UserPerformanceTest {
+  users {
+    id
+    name
+    email
+    reviews {
+      id
+      rating
+      body
+      product {
+        id
+        title
+        categories {
+          name
+        }
+        reviews {
+          rating
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# EDGE CASES
+# --------------------------------------------------
+
+# Empty relationships should not cause errors
+query ProductsWithPossiblyEmptyReviews {
+  products {
+    id
+    title
+    reviews {
+      id
+      author {
+        name
+      }
+    }
+  }
+}
+
+# Multiple references to same entity
+query SameEntityMultipleTimes {
+  first: product(id: "prod-001") {
+    categories {
+      id
+      name
+    }
+  }
+  second: product(id: "prod-001") {
+    categories {
+      id
+      name
+    }
+  }
+}
+
+# --------------------------------------------------
+# COMPARISON QUERIES (to verify correctness)
+# --------------------------------------------------
+
+# Simple query to verify data integrity
+query VerifyDataIntegrity {
+  product(id: "prod-001") {
+    id
+    title
+    reviews {
+      id
+      rating
+      author {
+        id
+        name
+      }
+    }
+  }
+}
+
+# Ensure DataLoader doesn't change response shape
+query VerifyResponseShape {
+  products {
+    id
+    title
+    categories {
+      id
+      name
+    }
+  }
+}

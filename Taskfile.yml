@@ -1,0 +1,106 @@
+version: "3"
+
+dotenv: [".env"]
+
+vars:
+  MIGRATIONS_DIR: ./migrations
+  SEED_DIR: ./seed-data
+
+tasks:
+  env:init:
+    desc: Create .env from local.env (will not overwrite existing .env)
+    cmds:
+      - cp -n local.env .env
+      - echo ".env created from local.env — edit as needed."
+    status:
+      - test -f .env
+
+  env:reset:
+    desc: Overwrite .env with local.env defaults
+    cmds:
+      - cp local.env .env
+      - echo ".env reset to local.env defaults."
+
+  migrate:up:
+    desc: Run all pending migrations
+    cmds:
+      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" up
+
+  migrate:down:
+    desc: Roll back N migrations (default 1)
+    cmds:
+      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" down {{.N | default "1"}}
+
+  migrate:goto:
+    desc: Migrate to a specific version (e.g. task migrate:goto V=6)
+    cmds:
+      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" goto {{.V}}
+
+  migrate:version:
+    desc: Print current migration version
+    cmds:
+      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" version
+
+  migrate:force:
+    desc: Force set version without running migration (fixes dirty state)
+    cmds:
+      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" force {{.V}}
+
+  migrate:create:
+    desc: Create a new migration pair (e.g. task migrate:create NAME=create_users)
+    cmds:
+      - migrate create -ext sql -dir {{.MIGRATIONS_DIR}} -seq {{.NAME}}
+
+  db:reset:
+    desc: Reset DB to clean state for a given stage (e.g. task db:reset STAGE=03)
+    vars:
+      STAGE_MAP:
+        sh: |
+          case "{{.STAGE}}" in
+            01) echo 0 ;;
+            02|03|04|05) echo 3 ;;
+            06|07|08) echo 5 ;;
+            09|10|11) echo 6 ;;
+            12) echo 10 ;;
+            13) echo 10 ;;
+            14) echo 10 ;;
+            15) echo 11 ;;
+            16) echo 11 ;;
+            *) echo "unknown" ;;
+          esac
+      SEED_FILE:
+        sh: |
+          case "{{.STAGE}}" in
+            01) echo "none" ;;
+            02|03|04|05) echo "base.sql" ;;
+            06|07|08|09|10|11) echo "full.sql" ;;
+            12|13|14|15|16) echo "full_with_orders.sql" ;;
+            *) echo "unknown" ;;
+          esac
+    cmds:
+      - |
+        if [ "{{.STAGE_MAP}}" = "unknown" ]; then
+          echo "Unknown stage: {{.STAGE}}. Valid stages: 01-16."
+          exit 1
+        fi
+        rm -f {{.DB_FILE}}
+        if [ "{{.STAGE_MAP}}" != "0" ]; then
+          migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" goto {{.STAGE_MAP}}
+          if [ "{{.SEED_FILE}}" != "none" ]; then
+            sqlite3 {{.DB_FILE}} < {{.SEED_DIR}}/{{.SEED_FILE}}
+          fi
+        fi
+        echo "DB reset for stage {{.STAGE}} (migration v{{.STAGE_MAP}}, seed: {{.SEED_FILE}})"
+
+  mocks:start:
+    desc: Start all mock external services
+    cmds:
+      - mockoon-cli start --data ./mocks/shipping.json --port 4010 &
+      - mockoon-cli start --data ./mocks/tax.json --port 4011 &
+      - mockoon-cli start --data ./mocks/currency.json --port 4012 &
+      - echo "Mock services started on ports 4010, 4011, 4012"
+
+  mocks:stop:
+    desc: Stop all mock external services
+    cmds:
+      - mockoon-cli stop all

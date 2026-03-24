@@ -1,0 +1,251 @@
+# Sample Operations for Stage 14: Remote Data Sources
+# Use these queries to manually explore the external API integration
+
+# ============================================================
+# QUERIES WITH REMOTE DATA
+# ============================================================
+
+# Query a product with shipping estimate from external API
+query ProductWithShipping {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    shippingEstimate(zipCode: "10001") {
+      provider
+      days
+      cost
+    }
+  }
+}
+
+# Query multiple products with shipping estimates
+query MultipleProductsWithShipping {
+  products {
+    id
+    title
+    price
+    shippingEstimate(zipCode: "90210") {
+      provider
+      days
+      cost
+    }
+  }
+}
+
+# Query with nested data: product -> categories + shipping
+query ProductWithCategoriesAndShipping {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    categories {
+      id
+      name
+    }
+    shippingEstimate(zipCode: "60601") {
+      provider
+      days
+      cost
+    }
+    seller {
+      name
+    }
+  }
+}
+
+# Query via connection with shipping estimates
+query ProductConnectionWithShipping {
+  productsConnection(first: 5) {
+    edges {
+      node {
+        id
+        title
+        price
+        shippingEstimate(zipCode: "02101") {
+          provider
+          days
+          cost
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# Test different zip codes (mock API may return different results)
+query ShippingToMultipleLocations {
+  nyc: product(id: "prod-001") {
+    title
+    shippingEstimate(zipCode: "10001") {
+      provider
+      days
+      cost
+    }
+  }
+  la: product(id: "prod-001") {
+    title
+    shippingEstimate(zipCode: "90001") {
+      provider
+      days
+      cost
+    }
+  }
+  chicago: product(id: "prod-001") {
+    title
+    shippingEstimate(zipCode: "60601") {
+      provider
+      days
+      cost
+    }
+  }
+}
+
+# ============================================================
+# TESTING GRACEFUL DEGRADATION
+# ============================================================
+
+# This query should still return product data even if shipping API is down
+# The shippingEstimate field should be null, not cause an error
+query ProductWithFailedShipping {
+  product(id: "prod-001") {
+    id
+    title
+    description
+    price
+    inStock
+    shippingEstimate(zipCode: "99999") {
+      provider
+      days
+      cost
+    }
+    categories {
+      name
+    }
+  }
+}
+
+# Test that other fields resolve even when remote data fails
+query PartialSuccessTest {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    averageRating
+    reviews {
+      id
+      rating
+      body
+    }
+    shippingEstimate(zipCode: "00000") {
+      provider
+      days
+      cost
+    }
+    seller {
+      name
+    }
+  }
+}
+
+# ============================================================
+# QUERIES WITHOUT REMOTE DATA
+# ============================================================
+
+# Query product without requesting shipping estimate
+# Should not call external API (resolver is lazy)
+query ProductWithoutShipping {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    categories {
+      name
+    }
+    seller {
+      name
+    }
+  }
+}
+
+# ============================================================
+# EXISTING FUNCTIONALITY (FROM PREVIOUS STAGES)
+# ============================================================
+
+# Verify subscriptions still work with remote data integration
+subscription OrderUpdates {
+  orderStatusChanged(orderId: "ord-001") {
+    id
+    status
+    items {
+      product {
+        title
+        # Note: No shipping estimate here - it requires a zipCode argument
+      }
+    }
+  }
+}
+
+# Create a product and query with shipping
+mutation CreateProductThenQueryShipping {
+  createProduct(input: {
+    title: "Test Product with Shipping"
+    description: "Testing remote data integration"
+    price: 79.99
+    categoryIds: ["cat-001"]
+  }) {
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+        price
+      }
+    }
+  }
+}
+
+# Follow-up query for the created product
+query NewProductWithShipping {
+  product(id: "prod-051") {
+    title
+    shippingEstimate(zipCode: "10001") {
+      provider
+      days
+      cost
+    }
+  }
+}
+
+# ============================================================
+# TESTING WORKFLOW
+# ============================================================
+#
+# 1. Start the mock shipping API:
+#    task mocks:start
+#
+# 2. Verify mock is running:
+#    curl http://localhost:4010/estimate?productId=prod-001&zip=10001
+#
+# 3. Run queries with shipping estimates - should return data
+#
+# 4. Stop the mock:
+#    task mocks:stop
+#
+# 5. Run queries again - shippingEstimate should be null, but other fields should work
+#
+# 6. Check server logs for error messages about failed API calls
+#
+# ============================================================
+
+# Query for monitoring/debugging
+query DebugProductData {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    __typename
+  }
+}

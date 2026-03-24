@@ -1,0 +1,52 @@
+# Stage 01: Hello GraphQL - Sample Operations
+
+# Basic query - your first GraphQL query!
+# This fetches the single field defined in the schema.
+query HelloWorld {
+  hello
+}
+
+# Same query without an operation name
+# Operation names are optional but recommended for debugging
+{
+  hello
+}
+
+# Query with explicit __typename
+# Every GraphQL type has a __typename meta-field
+{
+  hello
+  __typename
+}
+
+# Introspection: Ask the server what types are available
+# This is how GraphQL tools build autocomplete and documentation
+{
+  __schema {
+    queryType {
+      name
+      fields {
+        name
+        type {
+          name
+          kind
+        }
+      }
+    }
+  }
+}
+
+# Introspection: Get details about the Query type
+{
+  __type(name: "Query") {
+    name
+    kind
+    fields {
+      name
+      type {
+        name
+        kind
+      }
+    }
+  }
+}

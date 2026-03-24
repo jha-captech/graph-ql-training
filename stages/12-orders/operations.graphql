@@ -1,0 +1,568 @@
+# Sample operations for manual exploration of Stage 12: Orders and Transactions
+# Note: Use authentication tokens in Authorization header
+
+# ============================================================
+# Query: Single Order by ID
+# ============================================================
+query GetOrder {
+  order(id: "ord-001") {
+    id
+    status
+    total
+    createdAt
+    buyer {
+      id
+      name
+      email
+    }
+    items {
+      id
+      quantity
+      unitPrice
+      product {
+        id
+        title
+        price
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: All Orders (requires appropriate permissions)
+# ============================================================
+query GetAllOrders {
+  orders {
+    id
+    status
+    total
+    createdAt
+    buyer {
+      name
+    }
+    items {
+      quantity
+      unitPrice
+      product {
+        title
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: Orders as Customer (own orders only)
+# ============================================================
+query GetMyOrders {
+  me {
+    id
+    name
+  }
+  orders {
+    id
+    status
+    total
+    createdAt
+    items {
+      quantity
+      unitPrice
+      product {
+        title
+        price
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order
+# ============================================================
+mutation PlaceOrder {
+  placeOrder(
+    input: {
+      items: [
+        { productId: "prod-001", quantity: 2 }
+        { productId: "prod-005", quantity: 1 }
+      ]
+    }
+  ) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+        status
+        total
+        createdAt
+        buyer {
+          name
+        }
+        items {
+          id
+          quantity
+          unitPrice
+          product {
+            id
+            title
+            price
+          }
+        }
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order - Single Item
+# ============================================================
+mutation PlaceOrderSingleItem {
+  placeOrder(
+    input: {
+      items: [
+        { productId: "prod-010", quantity: 1 }
+      ]
+    }
+  ) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+        total
+        items {
+          quantity
+          unitPrice
+        }
+      }
+    }
+    ... on ValidationError {
+      message
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order - Multiple Items
+# ============================================================
+mutation PlaceOrderMultipleItems {
+  placeOrder(
+    input: {
+      items: [
+        { productId: "prod-002", quantity: 1 }
+        { productId: "prod-003", quantity: 2 }
+        { productId: "prod-004", quantity: 1 }
+      ]
+    }
+  ) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+        status
+        total
+        items {
+          product {
+            title
+          }
+          quantity
+          unitPrice
+        }
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order - Invalid Product (should fail)
+# ============================================================
+mutation PlaceOrderInvalidProduct {
+  placeOrder(
+    input: {
+      items: [
+        { productId: "invalid-product-id", quantity: 1 }
+      ]
+    }
+  ) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order - Zero Quantity (should fail)
+# ============================================================
+mutation PlaceOrderZeroQuantity {
+  placeOrder(
+    input: {
+      items: [
+        { productId: "prod-001", quantity: 0 }
+      ]
+    }
+  ) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order - Empty Items (should fail)
+# ============================================================
+mutation PlaceOrderEmptyItems {
+  placeOrder(
+    input: {
+      items: []
+    }
+  ) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+      }
+    }
+    ... on ValidationError {
+      message
+      field
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Update Order Status
+# ============================================================
+mutation UpdateOrderStatus {
+  updateOrderStatus(
+    id: "ord-004"
+    status: CONFIRMED
+  ) {
+    id
+    status
+    updatedAt
+    buyer {
+      name
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Update Order Status to Shipped
+# ============================================================
+mutation ShipOrder {
+  updateOrderStatus(
+    id: "ord-004"
+    status: SHIPPED
+  ) {
+    id
+    status
+    items {
+      product {
+        title
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Update Order Status to Delivered
+# ============================================================
+mutation DeliverOrder {
+  updateOrderStatus(
+    id: "ord-001"
+    status: DELIVERED
+  ) {
+    id
+    status
+    updatedAt
+  }
+}
+
+# ============================================================
+# Query: Product with Seller Information
+# ============================================================
+query ProductWithSeller {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    seller {
+      id
+      name
+      role
+    }
+  }
+}
+
+# ============================================================
+# Query: Products with Sellers
+# ============================================================
+query ProductsWithSellers {
+  products {
+    id
+    title
+    price
+    seller {
+      id
+      name
+    }
+  }
+}
+
+# ============================================================
+# Query: Order with Computed Total
+# ============================================================
+query OrderWithTotal {
+  order(id: "ord-001") {
+    id
+    total
+    items {
+      quantity
+      unitPrice
+    }
+  }
+}
+
+# ============================================================
+# Query: Compare Unit Price vs Current Price
+# Demonstrates price snapshotting
+# ============================================================
+query ComparePrices {
+  order(id: "ord-001") {
+    id
+    createdAt
+    items {
+      unitPrice
+      product {
+        id
+        title
+        price
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: All Order Statuses
+# ============================================================
+query OrdersByStatus {
+  pending: orders {
+    id
+    status
+    total
+  }
+}
+
+# ============================================================
+# Query: Rich Order Details
+# ============================================================
+query RichOrderDetails {
+  order(id: "ord-001") {
+    id
+    status
+    total
+    createdAt
+    updatedAt
+    buyer {
+      id
+      name
+      email
+      role
+    }
+    items {
+      id
+      quantity
+      unitPrice
+      product {
+        id
+        title
+        description
+        price
+        status
+        seller {
+          name
+        }
+        categories {
+          name
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: User's Orders with Details
+# ============================================================
+query MyOrderHistory {
+  me {
+    id
+    name
+  }
+  orders {
+    id
+    status
+    total
+    createdAt
+    items {
+      quantity
+      unitPrice
+      product {
+        title
+        seller {
+          name
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Complex Query: Orders, Products, and Users
+# ============================================================
+query ComplexOrderQuery {
+  me {
+    id
+    name
+    role
+  }
+
+  orders {
+    id
+    status
+    total
+  }
+
+  products {
+    id
+    title
+    seller {
+      name
+    }
+  }
+
+  order(id: "ord-001") {
+    id
+    buyer {
+      name
+    }
+    items {
+      product {
+        title
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: Verify Line Item Structure
+# ============================================================
+query LineItemDetails {
+  order(id: "ord-001") {
+    items {
+      id
+      quantity
+      unitPrice
+      product {
+        id
+        title
+        price
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Place Order with Variables
+# ============================================================
+mutation PlaceOrderWithVariables($items: [OrderItemInput!]!) {
+  placeOrder(input: { items: $items }) {
+    __typename
+    ... on PlaceOrderSuccess {
+      order {
+        id
+        total
+        items {
+          quantity
+          unitPrice
+        }
+      }
+    }
+    ... on ValidationError {
+      message
+      code
+    }
+  }
+}
+
+# Example variables:
+# {
+#   "items": [
+#     { "productId": "prod-001", "quantity": 2 },
+#     { "productId": "prod-005", "quantity": 1 }
+#   ]
+# }
+
+# ============================================================
+# Query: Order Status Enum Values
+# ============================================================
+query OrderStatusEnumValues {
+  __type(name: "OrderStatus") {
+    enumValues {
+      name
+    }
+  }
+}
+
+# ============================================================
+# Query: Test Authorization - Customer View
+# Should only see own orders
+# ============================================================
+query CustomerOrderView {
+  orders {
+    id
+    buyer {
+      id
+    }
+  }
+}
+
+# ============================================================
+# Query: Test Authorization - Admin View
+# Should see all orders
+# ============================================================
+query AdminOrderView {
+  orders {
+    id
+    status
+    buyer {
+      name
+      email
+    }
+    total
+  }
+}

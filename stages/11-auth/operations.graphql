@@ -1,0 +1,424 @@
+# Sample operations for manual exploration of Stage 11: Authentication and Authorization
+# Note: Set Authorization header to "Bearer <token>" in your GraphQL client
+
+# ============================================================
+# Query: me - Get Current Authenticated User
+# ============================================================
+query GetCurrentUser {
+  me {
+    id
+    name
+    email
+    role
+    createdAt
+  }
+}
+
+# ============================================================
+# Query: me - Unauthenticated (should return null)
+# Remove Authorization header to test
+# ============================================================
+query GetCurrentUserUnauthenticated {
+  me {
+    id
+    name
+    email
+  }
+}
+
+# ============================================================
+# Query: users - Admin Only
+# Requires ADMIN role
+# ============================================================
+query ListAllUsers {
+  users {
+    id
+    name
+    email
+    role
+    createdAt
+  }
+}
+
+# ============================================================
+# Query: users - Non-Admin Access (should fail)
+# Test with CUSTOMER or SELLER token
+# ============================================================
+query ListAllUsersAsCustomer {
+  users {
+    id
+    name
+  }
+}
+
+# ============================================================
+# Query: User.email - Field-Level Auth
+# Email is visible to self and admins only
+# ============================================================
+query ViewOwnEmail {
+  me {
+    id
+    name
+    email  # Should be visible
+  }
+}
+
+query ViewOtherUserEmail {
+  user(id: "user-002") {
+    id
+    name
+    email  # Should be null for non-admin, non-self
+  }
+}
+
+# ============================================================
+# Query: Multiple Users - Testing Field-Level Auth
+# ============================================================
+query ViewMultipleUsersEmails {
+  me {
+    id
+    name
+    email  # Visible (self)
+  }
+
+  user1: user(id: "user-002") {
+    id
+    name
+    email  # Null or error if not admin
+  }
+
+  user2: user(id: "user-003") {
+    id
+    name
+    email  # Null or error if not admin
+  }
+}
+
+# ============================================================
+# Query: Admin Viewing All User Emails
+# Requires ADMIN role
+# ============================================================
+query AdminViewAllEmails {
+  users {
+    id
+    name
+    email  # Visible for all users when requested by admin
+    role
+  }
+}
+
+# ============================================================
+# Mutation: Create Product - Requires SELLER or ADMIN
+# ============================================================
+mutation CreateProductAsSeller {
+  createProduct(
+    input: {
+      title: "New Seller Product"
+      description: "Created by a seller"
+      price: 15999
+      categoryIds: ["cat-001"]
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+        price
+      }
+    }
+    ... on ValidationError {
+      message
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Create Product - Customer Access (should fail)
+# Test with CUSTOMER token
+# ============================================================
+mutation CreateProductAsCustomer {
+  createProduct(
+    input: {
+      title: "Customer Attempted Product"
+      price: 9999
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+        title
+      }
+    }
+    ... on ValidationError {
+      message
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Create Product - Unauthenticated (should fail)
+# Remove Authorization header
+# ============================================================
+mutation CreateProductUnauthenticated {
+  createProduct(
+    input: {
+      title: "Unauthenticated Product"
+      price: 9999
+    }
+  ) {
+    __typename
+    ... on CreateProductSuccess {
+      product {
+        id
+      }
+    }
+    ... on ValidationError {
+      message
+      code
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Update Product - As Admin
+# ============================================================
+mutation UpdateProductAsAdmin {
+  updateProduct(
+    id: "prod-001"
+    input: {
+      title: "Admin Updated Title"
+      price: 19999
+    }
+  ) {
+    product {
+      id
+      title
+      price
+      updatedAt
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Create Review - As Authenticated Customer
+# ============================================================
+mutation CreateReviewAsCustomer {
+  createReview(
+    input: {
+      productId: "prod-003"
+      rating: 4
+      body: "Good product, would recommend!"
+    }
+  ) {
+    review {
+      id
+      rating
+      body
+      author {
+        id
+        name
+      }
+      product {
+        title
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutation: Create Review - Unauthenticated (should fail)
+# ============================================================
+mutation CreateReviewUnauthenticated {
+  createReview(
+    input: {
+      productId: "prod-001"
+      rating: 5
+      body: "Unauthenticated review"
+    }
+  ) {
+    review {
+      id
+    }
+  }
+}
+
+# ============================================================
+# Query: Products - Public Access
+# Should work without authentication
+# ============================================================
+query PublicProductsList {
+  products {
+    id
+    title
+    price
+    status
+  }
+}
+
+# ============================================================
+# Query: Pagination - Public Access
+# Should work without authentication
+# ============================================================
+query PublicProductsPaginated {
+  productsConnection(first: 10) {
+    edges {
+      node {
+        id
+        title
+        price
+      }
+    }
+    totalCount
+  }
+}
+
+# ============================================================
+# Query: Product Details - Public Access
+# ============================================================
+query PublicProductDetails {
+  product(id: "prod-001") {
+    id
+    title
+    description
+    price
+    averageRating
+    categories {
+      name
+    }
+    reviews {
+      rating
+      body
+      author {
+        name
+        email  # Should be restricted
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: User Reviews - Testing Author Email Visibility
+# ============================================================
+query UserReviewsWithAuthorEmails {
+  product(id: "prod-001") {
+    title
+    reviews {
+      rating
+      body
+      author {
+        id
+        name
+        email  # Field-level auth applies here too
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: Search - Public Access
+# ============================================================
+query PublicSearch {
+  search(term: "keyboard") {
+    __typename
+    ... on Product {
+      id
+      title
+      price
+    }
+    ... on Category {
+      id
+      name
+    }
+    ... on User {
+      id
+      name
+      email  # Should be restricted
+    }
+  }
+}
+
+# ============================================================
+# Query: Node Interface - With Auth
+# ============================================================
+query NodeWithAuth {
+  user: node(id: "user-001") {
+    id
+    ... on User {
+      name
+      email  # Field-level auth applies
+      role
+    }
+  }
+
+  product: node(id: "prod-001") {
+    id
+    ... on Product {
+      title
+      price
+    }
+  }
+}
+
+# ============================================================
+# Complex Query: Multiple Auth Levels
+# ============================================================
+query ComplexAuthQuery {
+  # Public data
+  products {
+    id
+    title
+  }
+
+  # Requires auth
+  me {
+    id
+    name
+    email  # Visible (self)
+  }
+
+  # Requires admin
+  users {
+    id
+    name
+    email  # Should fail for non-admin
+  }
+
+  # Public with restricted fields
+  product(id: "prod-001") {
+    title
+    reviews {
+      rating
+      author {
+        name
+        email  # Restricted
+      }
+    }
+  }
+}
+
+# ============================================================
+# Query: Test Role Enum
+# ============================================================
+query UserRoles {
+  users {
+    id
+    name
+    role
+  }
+}
+
+# ============================================================
+# Query: Filter by Role (Admin View)
+# ============================================================
+query AdminViewCustomers {
+  users {
+    id
+    name
+    role
+    email
+  }
+}

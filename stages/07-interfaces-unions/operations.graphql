@@ -1,0 +1,366 @@
+# Sample operations for exploring Stage 07 - Interfaces and Unions
+# These are NOT part of the test suite — use them manually with GraphiQL or Postman
+
+# --------------------------------------------------
+# NODE INTERFACE - Global Object Identification
+# --------------------------------------------------
+
+# Query any entity by global ID
+query GetNodeById {
+  node(id: "prod-001") {
+    id
+    __typename
+  }
+}
+
+# Query node with type-specific fields using inline fragments
+query GetNodeWithTypeSpecificFields {
+  node(id: "prod-001") {
+    id
+    __typename
+    ... on Product {
+      title
+      price
+    }
+    ... on User {
+      name
+      email
+    }
+    ... on Category {
+      name
+    }
+  }
+}
+
+# Query multiple nodes with aliases
+query GetMultipleNodes {
+  product: node(id: "prod-001") {
+    id
+    ... on Product {
+      title
+    }
+  }
+  user: node(id: "user-001") {
+    id
+    ... on User {
+      name
+    }
+  }
+  category: node(id: "cat-001") {
+    id
+    ... on Category {
+      name
+    }
+  }
+}
+
+# --------------------------------------------------
+# TIMESTAMPED INTERFACE
+# --------------------------------------------------
+
+# Query timestamped fields from different types
+query GetTimestampedEntities {
+  product(id: "prod-001") {
+    id
+    createdAt
+    updatedAt
+  }
+  user(id: "user-001") {
+    id
+    createdAt
+    updatedAt
+  }
+}
+
+# Query Node and Timestamped interfaces together
+query GetNodeWithTimestamps {
+  node(id: "prod-001") {
+    id
+    ... on Timestamped {
+      createdAt
+      updatedAt
+    }
+    ... on Product {
+      title
+    }
+  }
+}
+
+# --------------------------------------------------
+# SEARCH UNION
+# --------------------------------------------------
+
+# Search returning mixed types
+query SearchEverything {
+  search(term: "Mechanical") {
+    __typename
+    ... on Product {
+      id
+      title
+      price
+    }
+    ... on Category {
+      id
+      name
+    }
+    ... on User {
+      id
+      name
+      email
+    }
+  }
+}
+
+# Search with specific term for products
+query SearchProducts {
+  search(term: "Keyboard") {
+    __typename
+    ... on Product {
+      id
+      title
+      price
+      categories {
+        name
+      }
+    }
+  }
+}
+
+# Search for users
+query SearchUsers {
+  search(term: "Alice") {
+    __typename
+    ... on User {
+      id
+      name
+      email
+    }
+  }
+}
+
+# Search for categories
+query SearchCategories {
+  search(term: "Electronics") {
+    __typename
+    ... on Category {
+      id
+      name
+      products {
+        title
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# TYPENAME META-FIELD
+# --------------------------------------------------
+
+# Query __typename for all entity types
+query GetAllTypenames {
+  products {
+    __typename
+    id
+    title
+  }
+  users {
+    __typename
+    id
+    name
+  }
+  categories {
+    __typename
+    id
+    name
+  }
+}
+
+# __typename in nested queries
+query GetProductWithReviewTypenames {
+  product(id: "prod-001") {
+    __typename
+    id
+    title
+    reviews {
+      __typename
+      id
+      rating
+      author {
+        __typename
+        id
+        name
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# MULTIPLE INTERFACES
+# --------------------------------------------------
+
+# Query a type implementing both Node and Timestamped
+query GetProductInterfaces {
+  product(id: "prod-001") {
+    # Node interface
+    id
+    # Timestamped interface
+    createdAt
+    updatedAt
+    # Product-specific
+    title
+    price
+  }
+}
+
+# Query Review implementing Node and Timestamped
+query GetReviewInterfaces {
+  product(id: "prod-001") {
+    reviews {
+      # Node interface
+      id
+      # Timestamped interface
+      createdAt
+      updatedAt
+      # Review-specific
+      rating
+      body
+    }
+  }
+}
+
+# --------------------------------------------------
+# INLINE FRAGMENTS WITH FRAGMENTS
+# --------------------------------------------------
+
+# Named fragment with inline fragments
+fragment SearchResultFields on SearchResult {
+  __typename
+  ... on Product {
+    id
+    title
+    price
+  }
+  ... on Category {
+    id
+    name
+  }
+  ... on User {
+    id
+    name
+  }
+}
+
+query SearchWithFragment {
+  search(term: "test") {
+    ...SearchResultFields
+  }
+}
+
+# --------------------------------------------------
+# COMPLEX QUERIES
+# --------------------------------------------------
+
+# Node query with deep nesting
+query GetNodeWithNesting {
+  node(id: "prod-001") {
+    id
+    ... on Product {
+      title
+      categories {
+        id
+        name
+      }
+      reviews {
+        id
+        author {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+
+# Search with relationships
+query SearchWithRelationships {
+  search(term: "Alice") {
+    ... on User {
+      id
+      name
+      reviews {
+        id
+        rating
+        product {
+          title
+        }
+      }
+    }
+    ... on Product {
+      id
+      title
+      reviews {
+        author {
+          name
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# EDGE CASES
+# --------------------------------------------------
+
+# Query node with non-existent ID
+query GetNonExistentNode {
+  node(id: "invalid-999") {
+    id
+    __typename
+  }
+}
+
+# Empty search results
+query SearchNoResults {
+  search(term: "xyzabc123nonexistent") {
+    __typename
+  }
+}
+
+# Category doesn't implement Timestamped
+query GetCategoryWithoutTimestamps {
+  category(id: "cat-001") {
+    id
+    name
+    # createdAt and updatedAt should not be available
+  }
+}
+
+# --------------------------------------------------
+# COMBINED WITH DIRECTIVES
+# --------------------------------------------------
+
+# Search with conditional fields
+query SearchWithDirectives($includePrice: Boolean!) {
+  search(term: "Keyboard") {
+    __typename
+    ... on Product {
+      id
+      title
+      price @include(if: $includePrice)
+    }
+  }
+}
+# Variables: { "includePrice": true }
+
+# Node query with variables
+query GetNodeVariable($nodeId: ID!, $includeTimestamps: Boolean!) {
+  node(id: $nodeId) {
+    id
+    __typename
+    ... on Timestamped @include(if: $includeTimestamps) {
+      createdAt
+      updatedAt
+    }
+  }
+}
+# Variables: { "nodeId": "prod-001", "includeTimestamps": true }

@@ -1,0 +1,121 @@
+# Stage 02: Types and Enums - Sample Operations
+
+# Query all products with all fields
+query GetAllProducts {
+  products {
+    id
+    title
+    description
+    price
+    inStock
+    status
+  }
+}
+
+# Query all products with only essential fields
+# Notice how you can request just what you need - no overfetching
+query GetProductsMinimal {
+  products {
+    id
+    title
+    price
+  }
+}
+
+# Query a single product by ID
+# Replace "prod-001" with an ID from your seed data
+query GetProduct {
+  product(id: "prod-001") {
+    id
+    title
+    description
+    price
+    inStock
+    status
+  }
+}
+
+# Query a product with variables (best practice)
+query GetProductById($id: ID!) {
+  product(id: $id) {
+    id
+    title
+    description
+    price
+    inStock
+    status
+  }
+}
+# Variables: { "id": "prod-001" }
+
+# Query a non-existent product (should return null, not error)
+query GetNonExistentProduct {
+  product(id: "does-not-exist") {
+    id
+    title
+  }
+}
+
+# Filter products by specific fields
+# Demonstrates selective field fetching
+query GetProductTitlesAndPrices {
+  products {
+    title
+    price
+  }
+}
+
+# Query products and check for nullable description
+query GetProductsWithNullableDescription {
+  products {
+    id
+    title
+    description  # This can be null for some products
+    status
+  }
+}
+
+# Query using aliases to fetch multiple products
+query GetMultipleProducts {
+  first: product(id: "prod-001") {
+    id
+    title
+    price
+  }
+  second: product(id: "prod-002") {
+    id
+    title
+    price
+  }
+}
+
+# Introspection: Examine the Product type
+query IntrospectProduct {
+  __type(name: "Product") {
+    name
+    kind
+    fields {
+      name
+      type {
+        name
+        kind
+        ofType {
+          name
+          kind
+        }
+      }
+    }
+  }
+}
+
+# Introspection: Examine the ProductStatus enum
+query IntrospectProductStatus {
+  __type(name: "ProductStatus") {
+    name
+    kind
+    enumValues {
+      name
+      description
+    }
+  }
+}

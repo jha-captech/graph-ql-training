@@ -1,0 +1,285 @@
+# Sample operations for exploring Stage 05 query language features
+# These are NOT part of the test suite — use them manually with GraphiQL or Postman
+
+# --------------------------------------------------
+# VARIABLES
+# --------------------------------------------------
+
+# Query with variable for product ID
+query GetProductById($productId: ID!) {
+  product(id: $productId) {
+    id
+    title
+    price
+  }
+}
+# Variables: { "productId": "prod-001" }
+
+# Query with multiple variables
+query GetProductsFiltered($status: ProductStatus!, $minPrice: Float!) {
+  products {
+    id
+    title
+    price
+    status
+  }
+}
+# Variables: { "status": "ACTIVE", "minPrice": 10000 }
+
+# Mutation with input variable
+mutation CreateNewProduct($input: CreateProductInput!) {
+  createProduct(input: $input) {
+    product {
+      id
+      title
+      price
+    }
+  }
+}
+# Variables: { "input": { "title": "New Product", "price": 9999 } }
+
+# --------------------------------------------------
+# ALIASES
+# --------------------------------------------------
+
+# Query same field twice with different arguments
+query GetTwoProducts {
+  first: product(id: "prod-001") {
+    id
+    title
+    price
+  }
+  second: product(id: "prod-002") {
+    id
+    title
+    price
+  }
+}
+
+# Query same field with different aliases for clarity
+query GetProductDetails {
+  keyboard: product(id: "prod-001") {
+    id
+    title
+  }
+  mouse: product(id: "prod-002") {
+    id
+    title
+  }
+  headphones: product(id: "prod-005") {
+    id
+    title
+  }
+}
+
+# Alias to avoid field name collisions
+query GetProductWithCategories {
+  product(id: "prod-001") {
+    id
+    title
+    productCategories: categories {
+      id
+      name
+    }
+  }
+}
+
+# --------------------------------------------------
+# NAMED FRAGMENTS
+# --------------------------------------------------
+
+# Define a reusable fragment
+fragment ProductBasicInfo on Product {
+  id
+  title
+  price
+  status
+}
+
+# Use fragment in query
+query GetProductsWithFragment {
+  products {
+    ...ProductBasicInfo
+    description
+  }
+}
+
+# Reuse fragment multiple times
+query GetMultipleProductsWithFragment {
+  first: product(id: "prod-001") {
+    ...ProductBasicInfo
+  }
+  second: product(id: "prod-002") {
+    ...ProductBasicInfo
+  }
+}
+
+# Nested fragment
+fragment ProductWithCategories on Product {
+  ...ProductBasicInfo
+  categories {
+    id
+    name
+  }
+}
+
+query GetProductWithNestedFragments {
+  product(id: "prod-001") {
+    ...ProductWithCategories
+  }
+}
+
+# Multiple fragments
+fragment ProductPricing on Product {
+  price
+  inStock
+}
+
+fragment ProductMeta on Product {
+  id
+  title
+  status
+}
+
+query GetProductWithMultipleFragments {
+  product(id: "prod-001") {
+    ...ProductPricing
+    ...ProductMeta
+  }
+}
+
+# --------------------------------------------------
+# INLINE FRAGMENTS
+# --------------------------------------------------
+
+# Inline fragment for type-specific fields (preparation for unions/interfaces)
+query GetProductsWithInlineFragment {
+  products {
+    id
+    title
+    ... on Product {
+      price
+      categories {
+        name
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# DIRECTIVES (@include and @skip)
+# --------------------------------------------------
+
+# Include field conditionally
+query GetProductWithOptionalCategories($includeCategories: Boolean!) {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    categories @include(if: $includeCategories) {
+      id
+      name
+    }
+  }
+}
+# Variables: { "includeCategories": true }
+# Then try: { "includeCategories": false }
+
+# Skip field conditionally
+query GetProductWithOptionalDescription($skipDescription: Boolean!) {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    description @skip(if: $skipDescription)
+  }
+}
+# Variables: { "skipDescription": false }
+# Then try: { "skipDescription": true }
+
+# Multiple directives on different fields
+query GetProductWithMultipleDirectives(
+  $includeCategories: Boolean!
+  $skipDescription: Boolean!
+) {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    description @skip(if: $skipDescription)
+    categories @include(if: $includeCategories) {
+      name
+    }
+  }
+}
+# Variables: { "includeCategories": true, "skipDescription": false }
+
+# Directive on nested field
+query GetProductsWithConditionalNesting($includeProducts: Boolean!) {
+  categories {
+    id
+    name
+    products @include(if: $includeProducts) {
+      id
+      title
+    }
+  }
+}
+# Variables: { "includeProducts": true }
+
+# --------------------------------------------------
+# COMBINATION: Variables, Aliases, Fragments, Directives
+# --------------------------------------------------
+
+fragment CategoryInfo on Category {
+  id
+  name
+}
+
+query ComplexQuery(
+  $id1: ID!
+  $id2: ID!
+  $includeCategories: Boolean!
+) {
+  first: product(id: $id1) {
+    ...ProductBasicInfo
+    categories @include(if: $includeCategories) {
+      ...CategoryInfo
+    }
+  }
+  second: product(id: $id2) {
+    ...ProductBasicInfo
+  }
+}
+# Variables: {
+#   "id1": "prod-001",
+#   "id2": "prod-002",
+#   "includeCategories": true
+# }
+
+# --------------------------------------------------
+# OPERATION NAMES
+# --------------------------------------------------
+
+# Named query (good practice)
+query FetchElectronicsProducts {
+  products {
+    id
+    title
+    categories {
+      name
+    }
+  }
+}
+
+# Named mutation
+mutation UpdateKeyboardPrice($id: ID!, $input: UpdateProductInput!) {
+  updateProduct(id: $id, input: $input) {
+    product {
+      id
+      title
+      price
+    }
+  }
+}
+# Variables: { "id": "prod-001", "input": { "price": 13999 } }

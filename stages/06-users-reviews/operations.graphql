@@ -1,0 +1,359 @@
+# Sample operations for exploring Stage 06 - Users and Reviews
+# These are NOT part of the test suite — use them manually with GraphiQL or Postman
+
+# --------------------------------------------------
+# USER QUERIES
+# --------------------------------------------------
+
+# Get a single user by ID
+query GetUser {
+  user(id: "user-001") {
+    id
+    name
+    email
+    createdAt
+    updatedAt
+  }
+}
+
+# Get all users
+query GetAllUsers {
+  users {
+    id
+    name
+    email
+  }
+}
+
+# Get user with their reviews
+query GetUserWithReviews {
+  user(id: "user-001") {
+    id
+    name
+    email
+    reviews {
+      id
+      rating
+      body
+      createdAt
+    }
+  }
+}
+
+# --------------------------------------------------
+# PRODUCT WITH REVIEWS
+# --------------------------------------------------
+
+# Get product with its reviews
+query GetProductWithReviews {
+  product(id: "prod-001") {
+    id
+    title
+    price
+    reviews {
+      id
+      rating
+      body
+      createdAt
+    }
+  }
+}
+
+# Get product with reviews and authors
+query GetProductWithReviewsAndAuthors {
+  product(id: "prod-001") {
+    id
+    title
+    averageRating
+    reviews {
+      id
+      rating
+      body
+      author {
+        id
+        name
+      }
+      createdAt
+    }
+  }
+}
+
+# Get product average rating only
+query GetProductAverageRating {
+  product(id: "prod-001") {
+    id
+    title
+    averageRating
+  }
+}
+
+# --------------------------------------------------
+# REVIEW RELATIONSHIPS
+# --------------------------------------------------
+
+# Get review with author and product
+query GetReviewWithRelationships {
+  product(id: "prod-001") {
+    reviews {
+      id
+      rating
+      body
+      author {
+        id
+        name
+        email
+      }
+      product {
+        id
+        title
+        price
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# COMPLEX TRAVERSALS
+# --------------------------------------------------
+
+# User -> Reviews -> Products
+query GetUserReviewsWithProducts {
+  user(id: "user-001") {
+    id
+    name
+    reviews {
+      id
+      rating
+      body
+      product {
+        id
+        title
+        price
+        categories {
+          name
+        }
+      }
+    }
+  }
+}
+
+# Products with reviews and their authors' other reviews
+query GetProductsWithReviewAuthorsActivity {
+  products {
+    id
+    title
+    averageRating
+    reviews {
+      rating
+      author {
+        name
+        reviews {
+          id
+          rating
+          product {
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+# All users with their review counts (computed field pattern)
+query GetUsersWithReviewActivity {
+  users {
+    id
+    name
+    email
+    reviews {
+      id
+    }
+  }
+}
+
+# --------------------------------------------------
+# FILTERING AND SORTING PATTERNS
+# --------------------------------------------------
+
+# Products sorted by average rating (manually in client)
+query GetProductsWithRatings {
+  products {
+    id
+    title
+    averageRating
+  }
+}
+
+# Products with many reviews
+query GetProductsWithReviews {
+  products {
+    id
+    title
+    averageRating
+    reviews {
+      id
+      rating
+    }
+  }
+}
+
+# --------------------------------------------------
+# MUTATIONS
+# --------------------------------------------------
+
+# Create a review
+mutation CreateReview {
+  createReview(
+    input: {
+      productId: "prod-002"
+      rating: 5
+      body: "Excellent product! Highly recommended."
+    }
+  ) {
+    review {
+      id
+      rating
+      body
+      author {
+        id
+        name
+      }
+      product {
+        id
+        title
+      }
+      createdAt
+    }
+  }
+}
+
+# Create a review without body (optional field)
+mutation CreateReviewWithoutBody {
+  createReview(
+    input: {
+      productId: "prod-005"
+      rating: 4
+    }
+  ) {
+    review {
+      id
+      rating
+      body
+      author {
+        name
+      }
+      product {
+        title
+      }
+    }
+  }
+}
+
+# Create review and check updated average rating
+mutation CreateReviewAndCheckAverage {
+  createReview(
+    input: {
+      productId: "prod-001"
+      rating: 3
+    }
+  ) {
+    review {
+      id
+      rating
+      product {
+        id
+        title
+        averageRating
+        reviews {
+          rating
+        }
+      }
+    }
+  }
+}
+
+# --------------------------------------------------
+# EDGE CASES
+# --------------------------------------------------
+
+# Product with no reviews (averageRating should be null)
+query GetProductWithNoReviews {
+  product(id: "prod-008") {
+    id
+    title
+    description
+    averageRating
+    reviews {
+      id
+    }
+  }
+}
+
+# User with no reviews
+query GetUserWithNoReviews {
+  user(id: "user-003") {
+    id
+    name
+    reviews {
+      id
+    }
+  }
+}
+
+# --------------------------------------------------
+# COMBINED WITH PREVIOUS STAGES
+# --------------------------------------------------
+
+# Use variables, aliases, and fragments
+fragment ReviewInfo on Review {
+  id
+  rating
+  body
+  createdAt
+}
+
+fragment UserInfo on User {
+  id
+  name
+  email
+}
+
+query GetProductsWithReviewData($productId1: ID!, $productId2: ID!) {
+  first: product(id: $productId1) {
+    id
+    title
+    averageRating
+    reviews {
+      ...ReviewInfo
+      author {
+        ...UserInfo
+      }
+    }
+  }
+  second: product(id: $productId2) {
+    id
+    title
+    averageRating
+    reviews {
+      ...ReviewInfo
+    }
+  }
+}
+# Variables: { "productId1": "prod-001", "productId2": "prod-005" }
+
+# Use directives
+query GetProductWithOptionalReviews($includeReviews: Boolean!) {
+  product(id: "prod-001") {
+    id
+    title
+    averageRating
+    reviews @include(if: $includeReviews) {
+      id
+      rating
+      author {
+        name
+      }
+    }
+  }
+}
+# Variables: { "includeReviews": true }
