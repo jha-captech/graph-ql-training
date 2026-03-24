@@ -23,25 +23,19 @@ git clone <repo-url> && cd graph-ql-training
 # 2. Run the setup script (checks prerequisites, creates .env, installs test runner)
 ./setup.sh
 
-# 3. Create your first stage branch and set up the database
+# 3. Create your first stage branch
 git checkout -b stage/01
-task db:reset STAGE=02   # stage 01 has no database
 
 # 4. Read the stage materials
 cat stages/01-hello-graphql/concepts.md
 cat stages/01-hello-graphql/schema.graphql
 
-# 5. Build your GraphQL server (in your language of choice)
-#    targeting http://localhost:4000/graphql
+# 5. Build your GraphQL server in a server/ directory (any language/framework)
+mkdir server && cd server
+# ... initialize your project (npm init, go mod init, etc.)
 
-# 6. Run the tests for your stage
+# 6. Run your server at http://localhost:4000/graphql, then run the tests
 cd test-runner && npx cucumber-js --tags @stage:01
-```
-
-You can also pass a stage number to do steps 2 and 3 at once:
-
-```bash
-./setup.sh 02
 ```
 
 ## Branching Strategy
@@ -75,16 +69,65 @@ This gives you:
 
 We recommend putting your server implementation in a `server/` directory at the project root to keep it separate from the curriculum materials.
 
-## How It Works
+## Working on a Stage
 
-1. **Read** the stage's `concepts.md` for the "what" and "why"
-2. **Study** the stage's `schema.graphql` — this is the contract your server must fulfill
-3. **Explore** `operations.graphql` for example queries you can test manually
-4. **Implement** your server to match the schema
-5. **Test** with `npx cucumber-js --tags @stage:XX` until all scenarios pass
-6. **Move on** to the next stage
+Every stage follows the same workflow. Here's the full checklist:
+
+```bash
+# 1. Branch from your current stage (or main for stage 01)
+git checkout -b stage/XX
+
+# 2. Set up the database (skip for stage 01 — it has no database)
+task db:reset STAGE=XX
+
+# 3. Read the concepts and schema
+cat stages/XX-name/concepts.md
+cat stages/XX-name/schema.graphql
+
+# 4. Explore the sample queries (optional — handy for manual testing)
+cat stages/XX-name/operations.graphql
+
+# 5. Implement your server to match the schema
+
+# 6. Run the tests until they all pass
+cd test-runner && npx cucumber-js --tags @stage:XX
+
+# 7. Commit your work and move to the next stage
+git add -A && git commit -m "stage XX complete"
+```
 
 Each stage builds on the previous one. Schemas are cumulative — stage 06's schema includes everything from stages 01-05 plus new additions.
+
+## Your Server Code
+
+Put your implementation in a `server/` directory at the project root:
+
+```
+graph-ql-training/
+├── server/          <-- your code goes here
+│   ├── package.json (or go.mod, requirements.txt, etc.)
+│   └── ...
+├── stages/          <-- read-only curriculum materials
+├── migrations/
+└── ...
+```
+
+This keeps your implementation cleanly separated from the curriculum files. Initialize it with whatever framework you choose — `npm init`, `go mod init`, `dotnet new web`, etc. Your server must listen on `http://localhost:4000/graphql` (configurable via `.env`).
+
+## Environment Variables
+
+The `.env` file (created by `setup.sh` from `local.env`) controls shared configuration:
+
+| Variable           | Default                   | Purpose                             |
+| ------------------ | ------------------------- | ----------------------------------- |
+| `DB_FILE`          | `graphql_training.db`     | SQLite database file path           |
+| `SERVER_PORT`      | `4000`                    | Port your GraphQL server should use |
+| `JWT_SECRET`       | `graphql-training-secret` | JWT signing secret (stages 11+)     |
+| `SHIPPING_API_URL` | `http://localhost:4010`   | Shipping mock API (stage 14+)       |
+| `TAX_API_URL`      | `http://localhost:4011`   | Tax mock API (stage 14+)            |
+| `CURRENCY_API_URL` | `http://localhost:4012`   | Currency mock API (stage 14+)       |
+
+Your server should read from these variables rather than hardcoding values. The test runner uses the same `.env` file, so everything stays in sync.
 
 ## Stage Overview
 
