@@ -98,6 +98,8 @@ git add -A && git commit -m "stage XX complete"
 
 Each stage builds on the previous one. Schemas are cumulative — stage 06's schema includes everything from stages 01-05 plus new additions. Each stage provides a `concepts.md` with the "why", a `schema.graphql` with the target SDL, `features/*.feature` with test specs, and `operations.graphql` with sample queries for manual exploration.
 
+> **Important**: Only `schema.graphql` should be loaded by your server's schema configuration. The `operations.graphql` files contain client-side queries for manual testing — they are **not** schema definitions. Including them in your schema input (e.g., via a `*.graphql` glob) will cause parse errors.
+
 ## Your Server Code
 
 Put your implementation in a `server/` directory at the project root:
@@ -223,7 +225,7 @@ Your server should validate JWT tokens from the `Authorization: Bearer <token>` 
 
 ### Why E-Commerce
 
-After evaluating todo apps, blogs, social media, and library systems, a simplified marketplace wins because it naturally covers every GraphQL concept without contrived examples: object types (Products, Users, Orders), relationships of all cardinalities (User->Orders->LineItems, Products<->Categories), interfaces (`Node`, `Timestamped`), unions (`SearchResult`), enums (`OrderStatus`, `Role`), pagination (product catalog), auth (role-based access), subscriptions (order status changes), DataLoader (reviews for a list of products), and federation (subgraph splits).
+After evaluating todo apps, blogs, social media, and library systems, a simplified marketplace wins because it naturally covers every GraphQL concept without contrived examples: object types (Products, Users, Orders), relationships of all cardinalities (User->Orders->LineItems, Products\<->Categories), interfaces (`Node`, `Timestamped`), unions (`SearchResult`), enums (`OrderStatus`, `Role`), pagination (product catalog), auth (role-based access), subscriptions (order status changes), DataLoader (reviews for a list of products), and federation (subgraph splits).
 
 ### Why SQLite
 

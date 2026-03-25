@@ -1,4 +1,7 @@
 # Stage 01: Hello GraphQL - Sample Operations
+# These are CLIENT OPERATIONS (queries/mutations), NOT schema definitions.
+# Do NOT include this file in your server's schema configuration.
+# Use these for manual testing in GraphiQL, Postman, or similar tools.
 
 # Basic query - your first GraphQL query!
 # This fetches the single field defined in the schema.

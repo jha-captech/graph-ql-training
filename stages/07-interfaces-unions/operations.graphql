@@ -1,5 +1,7 @@
 # Sample operations for exploring Stage 07 - Interfaces and Unions
-# These are NOT part of the test suite — use them manually with GraphiQL or Postman
+# These are CLIENT OPERATIONS (queries/mutations), NOT schema definitions.
+# Do NOT include this file in your server's schema configuration.
+# Use these for manual testing in GraphiQL, Postman, or similar tools.
 
 # --------------------------------------------------
 # NODE INTERFACE - Global Object Identification
