@@ -90,13 +90,12 @@ After completing this stage, you should be able to answer:
 - [Serving GraphQL over HTTP](https://graphql.org/learn/serving-over-http/) — The transport layer spec
 - [Execution](https://graphql.org/learn/execution/) — How GraphQL resolves queries
 
-## What You're Building
+## Your Task
 
-A server that:
+1. Create a GraphQL server that listens at `http://localhost:4000/graphql`
+1. Define the schema from `schema.graphql` — a single `Query` type with one field: `hello: String!`
+1. Write a resolver for the `hello` field that returns exactly the string `"Hello, GraphQL!"`
+1. The server should accept POST requests and respond with JSON: `{ "data": { "hello": "Hello, GraphQL!" } }`
+1. Verify it works by running the test suite: `task test STAGE=01`
 
-1. Listens on an HTTP endpoint (typically `http://localhost:4000/graphql`)
-1. Defines a schema with a single `Query` type containing a `hello` field
-1. Implements a resolver for `hello` that returns any string (e.g., `"Hello, GraphQL!"`)
-1. Responds to POST requests with JSON in the format `{ "data": { "hello": "..." } }`
-
-No database, no authentication, no complex types—just the foundational machinery. Once you have this working, you understand the core loop: schema → resolver → response.
+No database, no authentication, no complex types — just the foundational machinery. Once you have this working, you understand the core loop: schema → resolver → response.

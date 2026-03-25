@@ -13,7 +13,7 @@ Feature: Hello Query
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    Then the response should contain "data.hello"
+    Then the response "data.hello" should equal "Hello, GraphQL!"
 
   Scenario: Query hello field with operation name
     When I send a GraphQL query:
@@ -24,7 +24,7 @@ Feature: Hello Query
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    Then the response should contain "data.hello"
+    Then the response "data.hello" should equal "Hello, GraphQL!"
 
   Scenario: Query non-existent field returns error
     When I send a GraphQL query:
