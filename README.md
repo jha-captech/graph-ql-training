@@ -131,24 +131,24 @@ Your server should read from these variables rather than hardcoding values. The 
 
 ## Stage Overview
 
-| Stage | Topic                      | Database        | Seed Tier |
-| ----- | -------------------------- | --------------- | --------- |
-| 01    | Hello GraphQL              | None            | None      |
-| 02    | Types & Enums              | Migrations 1-3  | `base`    |
-| 03    | Relationships              | Migrations 1-3  | `base`    |
-| 04    | Mutations                  | Migrations 1-3  | `base`    |
-| 05    | Query Language             | Migrations 1-3  | `base`    |
-| 06    | Users & Reviews            | Migrations 1-5  | `full`    |
-| 07    | Interfaces & Unions        | Migrations 1-5  | `full`    |
-| 08    | DataLoader                 | Migrations 1-5  | `full`    |
-| 09    | Pagination                 | Migrations 1-6  | `full`    |
-| 10    | Error Handling             | Migrations 1-6  | `full`    |
-| 11    | Authentication             | Migrations 1-6  | `full`    |
-| 12    | Orders                     | Migrations 1-10 | `orders`  |
-| 13    | Subscriptions              | Migrations 1-10 | `orders`  |
-| 14    | Remote Data Sources        | Migrations 1-10 | `orders`  |
-| 15    | Custom Scalars & Evolution | Migrations 1-11 | `orders`  |
-| 16    | Security & Federation      | Migrations 1-11 | `orders`  |
+| Stage | Topic                                                      | Database        | Seed Tier |
+| ----- | ---------------------------------------------------------- | --------------- | --------- |
+| 01    | [Hello GraphQL](stages/01-hello-graphql/)                  | None            | None      |
+| 02    | [Types & Enums](stages/02-types-and-enums/)                | Migrations 1-3  | `base`    |
+| 03    | [Relationships](stages/03-relationships/)                  | Migrations 1-3  | `base`    |
+| 04    | [Mutations](stages/04-mutations/)                          | Migrations 1-3  | `base`    |
+| 05    | [Query Language](stages/05-query-language/)                | Migrations 1-3  | `base`    |
+| 06    | [Users & Reviews](stages/06-users-reviews/)                | Migrations 1-5  | `full`    |
+| 07    | [Interfaces & Unions](stages/07-interfaces-unions/)        | Migrations 1-5  | `full`    |
+| 08    | [DataLoader](stages/08-dataloader/)                        | Migrations 1-5  | `full`    |
+| 09    | [Pagination](stages/09-pagination/)                        | Migrations 1-6  | `full`    |
+| 10    | [Error Handling](stages/10-error-handling/)                | Migrations 1-6  | `full`    |
+| 11    | [Authentication](stages/11-auth/)                          | Migrations 1-6  | `full`    |
+| 12    | [Orders](stages/12-orders/)                                | Migrations 1-10 | `orders`  |
+| 13    | [Subscriptions](stages/13-subscriptions/)                  | Migrations 1-10 | `orders`  |
+| 14    | [Remote Data Sources](stages/14-remote-data/)              | Migrations 1-10 | `orders`  |
+| 15    | [Custom Scalars & Evolution](stages/15-scalars-evolution/) | Migrations 1-11 | `orders`  |
+| 16    | [Security & Federation](stages/16-security-federation/)    | Migrations 1-11 | `orders`  |
 
 ## Task Commands
 
