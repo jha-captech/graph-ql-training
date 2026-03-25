@@ -107,15 +107,15 @@ Without this index, the database performs a full table scan for every page reque
 
 1. **Why are cursors better than offset/limit pagination?** What happens when items are inserted or deleted between page requests?
 
-2. **What happens if a client passes an invalid or tampered cursor?** How should your resolver handle it?
+1. **What happens if a client passes an invalid or tampered cursor?** How should your resolver handle it?
 
-3. **Why does the Connection spec include both `edges` and `nodes`?** When would you query just `nodes` vs. `edges`?
+1. **Why does the Connection spec include both `edges` and `nodes`?** When would you query just `nodes` vs. `edges`?
 
-4. **How do you implement `hasPreviousPage` and `hasNextPage`?** Do you query for `limit + 1` items to check if more exist?
+1. **How do you implement `hasPreviousPage` and `hasNextPage`?** Do you query for `limit + 1` items to check if more exist?
 
-5. **What does `totalCount` represent?** Does it count all products in the database, or just those matching the filter?
+1. **What does `totalCount` represent?** Does it count all products in the database, or just those matching the filter?
 
-6. **How do you handle backward pagination (`last` + `before`)?** Does your SQL query reverse the sort order?
+1. **How do you handle backward pagination (`last` + `before`)?** Does your SQL query reverse the sort order?
 
 ## Implementation Notes by Framework
 
@@ -124,10 +124,10 @@ Without this index, the database performs a full table scan for every page reque
 The `ProductConnection` type is just a regular GraphQL object type. Implement the `productsConnection` resolver to:
 
 1. Decode the `after`/`before` cursor to get the reference item
-2. Build a SQL query with `WHERE` and `LIMIT` clauses
-3. Map results to `edges` (each with its own cursor)
-4. Compute `pageInfo` fields by checking if more items exist
-5. Compute `totalCount` with a separate `COUNT(*)` query
+1. Build a SQL query with `WHERE` and `LIMIT` clauses
+1. Map results to `edges` (each with its own cursor)
+1. Compute `pageInfo` fields by checking if more items exist
+1. Compute `totalCount` with a separate `COUNT(*)` query
 
 ### gqlgen (Go)
 
@@ -183,13 +183,13 @@ Implement a `DataFetcher<ProductConnection>` that builds the connection object f
 
 1. **Non-deterministic ordering**: If you sort by a non-unique column (like `price`) without a secondary sort, pagination results become unstable. Always include a unique field (like `id`) in your `ORDER BY` clause.
 
-2. **Forgetting to filter totalCount**: The `totalCount` field must respect the `filter` input. Don't just return `SELECT COUNT(*) FROM products`.
+1. **Forgetting to filter totalCount**: The `totalCount` field must respect the `filter` input. Don't just return `SELECT COUNT(*) FROM products`.
 
-3. **Exposing raw IDs as cursors**: Clients might be tempted to manipulate unencoded cursors. Always encode (at minimum) or encrypt them.
+1. **Exposing raw IDs as cursors**: Clients might be tempted to manipulate unencoded cursors. Always encode (at minimum) or encrypt them.
 
-4. **Inefficient hasNextPage checks**: Don't run a separate query to check if more pages exist. Instead, fetch `limit + 1` items and check if you got the extra one.
+1. **Inefficient hasNextPage checks**: Don't run a separate query to check if more pages exist. Instead, fetch `limit + 1` items and check if you got the extra one.
 
-5. **Breaking cursor format**: Once you ship a cursor encoding format, changing it breaks existing clients who bookmarked cursors. Version your cursor format if you need to change it.
+1. **Breaking cursor format**: Once you ship a cursor encoding format, changing it breaks existing clients who bookmarked cursors. Version your cursor format if you need to change it.
 
 ## What Success Looks Like
 
@@ -202,3 +202,11 @@ After completing this stage:
 - `totalCount` reflects the filtered set, not the entire database
 
 The test suite will verify all of these behaviors. Your implementation should pass all scenarios before moving to the next stage.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:09
+```

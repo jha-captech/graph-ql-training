@@ -25,13 +25,13 @@ SQLite from day one teaches you the real-world pattern: GraphQL resolvers fetch 
 After completing this stage, you should be able to answer:
 
 1. **What are the five built-in scalar types in GraphQL?** (ID, String, Int, Float, Boolean)
-2. **What's the difference between `String` and `String!`?** What happens if a resolver returns null for each?
-3. **Why is `description` nullable but `title` non-null?** (Hint: think about what's essential vs. optional)
-4. **What's the difference between the `ID` and `String` scalars?** (They serialize the same way, but ID has semantic meaning)
-5. **What are the four arguments every resolver receives?** (parent/root, args, context, info)
-6. **Where should the database connection live?** (In the context object, not global state)
-7. **What happens when a client queries `product(id: "nonexistent")`?** (Should return null, not an error)
-8. **What's the difference between returning `null` and throwing an error in a resolver?**
+1. **What's the difference between `String` and `String!`?** What happens if a resolver returns null for each?
+1. **Why is `description` nullable but `title` non-null?** (Hint: think about what's essential vs. optional)
+1. **What's the difference between the `ID` and `String` scalars?** (They serialize the same way, but ID has semantic meaning)
+1. **What are the four arguments every resolver receives?** (parent/root, args, context, info)
+1. **Where should the database connection live?** (In the context object, not global state)
+1. **What happens when a client queries `product(id: "nonexistent")`?** (Should return null, not an error)
+1. **What's the difference between returning `null` and throwing an error in a resolver?**
 
 ## Implementation Notes by Framework
 
@@ -114,12 +114,20 @@ db = sqlite3.connect(os.environ.get("DB_FILE", "graphql_training.db"))
 A server that:
 
 1. Connects to a SQLite database (created and seeded via `task db:reset STAGE=02`)
-2. Reads the database path from the `DB_FILE` environment variable
-3. Defines a `Product` type with fields: `id`, `title`, `description`, `price`, `inStock`, `status`
-4. Defines a `ProductStatus` enum with values: `DRAFT`, `ACTIVE`, `ARCHIVED`
-5. Implements resolvers for:
+1. Reads the database path from the `DB_FILE` environment variable
+1. Defines a `Product` type with fields: `id`, `title`, `description`, `price`, `inStock`, `status`
+1. Defines a `ProductStatus` enum with values: `DRAFT`, `ACTIVE`, `ARCHIVED`
+1. Implements resolvers for:
    - `Query.products: [Product!]!` — returns all products from the database
    - `Query.product(id: ID!): Product` — returns a single product by ID, or null if not found
-6. Handles nullable fields correctly (e.g., `description` can be null, but `title` cannot)
+1. Handles nullable fields correctly (e.g., `description` can be null, but `title` cannot)
 
 The database is already set up with migrations and seed data. Your job is to read from it and expose it through GraphQL. This is the pattern you'll use for every stage: database → resolver → GraphQL response.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:02
+```

@@ -96,6 +96,14 @@ After completing this stage, you should be able to answer:
 1. Define the schema from `schema.graphql` — a single `Query` type with one field: `hello: String!`
 1. Write a resolver for the `hello` field that returns exactly the string `"Hello, GraphQL!"`
 1. The server should accept POST requests and respond with JSON: `{ "data": { "hello": "Hello, GraphQL!" } }`
-1. Verify it works by running the test suite: `task test STAGE=01`
+1. Verify it works by running the test suite
 
 No database, no authentication, no complex types — just the foundational machinery. Once you have this working, you understand the core loop: schema → resolver → response.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:01
+```

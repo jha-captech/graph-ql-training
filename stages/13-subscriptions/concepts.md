@@ -24,9 +24,9 @@ Without subscriptions, clients must poll the server repeatedly, wasting bandwidt
 Think of subscriptions as a newspaper subscription:
 
 1. **Subscribe**: Client opens a long-lived connection and says "notify me when X happens"
-2. **Publish**: When a mutation (or external event) changes data, the server publishes an event
-3. **Deliver**: The subscription resolver filters/transforms the event and sends it to matching subscribers
-4. **Unsubscribe**: Client closes the connection when done
+1. **Publish**: When a mutation (or external event) changes data, the server publishes an event
+1. **Deliver**: The subscription resolver filters/transforms the event and sends it to matching subscribers
+1. **Unsubscribe**: Client closes the connection when done
 
 The key insight: subscriptions are **reactive resolvers** triggered by events, not by client requests.
 
@@ -127,25 +127,26 @@ In-memory pub/sub (like `PubSub` from `graphql-subscriptions`) only works for si
 1. **What transport protocol do subscriptions use, and why not HTTP?**
    WebSocket, because HTTP is request-response only. Subscriptions need bidirectional, persistent connections.
 
-2. **Where does the pub/sub system fit in your architecture?**
+1. **Where does the pub/sub system fit in your architecture?**
    Between mutation resolvers (publishers) and subscription resolvers (subscribers). The mutation calls `pubsub.publish()`, the subscription calls `pubsub.asyncIterator()`.
 
-3. **How do you filter subscription events?**
+1. **How do you filter subscription events?**
    Capture filter arguments (like `orderId`) when the subscription is created. In the resolver, compare the event payload to the captured arguments before sending to the client.
 
-4. **What happens to subscriptions when the server restarts?**
+1. **What happens to subscriptions when the server restarts?**
    All WebSocket connections close. Clients must detect the disconnect and re-subscribe. In-memory pub/sub state is lost—events published during downtime are not delivered.
 
-5. **How would you scale subscriptions horizontally?**
+1. **How would you scale subscriptions horizontally?**
    Replace in-memory pub/sub with Redis, Kafka, or a message queue. Each server instance subscribes to the same event stream and pushes to its connected clients.
 
-6. **Should all data updates be subscriptions?**
+1. **Should all data updates be subscriptions?**
    No. Subscriptions add complexity. Use them for data that clients need **immediately** (order status, chat messages). For data that's fine to be stale (product catalog), stick with queries.
 
-7. **How do you handle subscription authorization?**
+1. **How do you handle subscription authorization?**
    Same as queries/mutations: check the user's identity from the WebSocket connection context. A customer should only subscribe to their own order updates, not others'.
 
-8. **What's the difference between `subscribe` and `resolve` in a subscription field?**
+1. **What's the difference between `subscribe` and `resolve` in a subscription field?**
+
    - `subscribe`: Returns the async iterator (event source)
    - `resolve`: Transforms the event payload before sending (optional—defaults to identity function)
 
@@ -154,10 +155,10 @@ In-memory pub/sub (like `PubSub` from `graphql-subscriptions`) only works for si
 The test runner uses a WebSocket client to:
 
 1. Connect to the GraphQL endpoint (WebSocket URL, typically `ws://localhost:4000/graphql`)
-2. Send a subscription operation
-3. Trigger a mutation that publishes an event
-4. Assert that the subscription receives the event within a timeout
-5. Verify the event payload matches expectations
+1. Send a subscription operation
+1. Trigger a mutation that publishes an event
+1. Assert that the subscription receives the event within a timeout
+1. Verify the event payload matches expectations
 
 Gherkin steps:
 
@@ -190,15 +191,15 @@ A server that:
 1. Adds a `Subscription` root type with two subscriptions:
    - `orderStatusChanged(orderId: ID!): Order!` — filtered by order ID, only delivers events for the specified order
    - `productCreated: Product!` — broadcast to all subscribers when any product is created
-2. Implements WebSocket support using the [graphql-ws](https://github.com/enisdenjo/graphql-ws) protocol (`graphql-transport-ws` subprotocol)
-3. Sets up an in-memory pub/sub system:
+1. Implements WebSocket support using the [graphql-ws](https://github.com/enisdenjo/graphql-ws) protocol (`graphql-transport-ws` subprotocol)
+1. Sets up an in-memory pub/sub system:
    - `updateOrderStatus` mutation publishes to `orderStatusChanged` subscribers
    - `createProduct` mutation publishes to `productCreated` subscribers
-4. Filters `orderStatusChanged` events so subscribers only receive events matching their `orderId` argument
-5. Broadcasts `productCreated` events to all connected subscribers
-6. Enforces authentication on subscriptions — unauthenticated users cannot subscribe
-7. Enforces authorization — customers can only subscribe to their own orders' status changes
-8. Resolves nested fields on subscription payloads (e.g., `Order.buyer`, `Order.items`, `Product.seller`)
+1. Filters `orderStatusChanged` events so subscribers only receive events matching their `orderId` argument
+1. Broadcasts `productCreated` events to all connected subscribers
+1. Enforces authentication on subscriptions — unauthenticated users cannot subscribe
+1. Enforces authorization — customers can only subscribe to their own orders' status changes
+1. Resolves nested fields on subscription payloads (e.g., `Order.buyer`, `Order.items`, `Product.seller`)
 
 The WebSocket endpoint should be at the same URL as your GraphQL HTTP endpoint (`ws://localhost:4000/graphql`). The test runner connects via WebSocket, sends a subscription, triggers a mutation via HTTP, and asserts that the subscription receives the correct event.
 
@@ -209,3 +210,11 @@ The WebSocket endpoint should be at the same URL as your GraphQL HTTP endpoint (
 - **Holding connections open indefinitely**: Implement heartbeat/ping-pong to detect dead connections.
 - **Blocking the event loop**: Subscription resolvers must be fast—don't do heavy computation in the filter function.
 - **Ignoring authentication**: Always validate that the subscriber is authorized to receive the events they're subscribing to.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:13
+```

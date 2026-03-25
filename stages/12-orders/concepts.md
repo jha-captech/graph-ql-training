@@ -102,8 +102,8 @@ If any step fails (product not found, database error), the entire transaction ro
 The `placeOrder` mutation touches three tables:
 
 1. **orders**: Create the order record
-2. **line_items**: Create one record per item
-3. **products**: Read current prices for snapshotting
+1. **line_items**: Create one record per item
+1. **products**: Read current prices for snapshotting
 
 This is more complex than single-entity mutations like `createProduct`. It requires:
 
@@ -170,17 +170,17 @@ The database migration adds `seller_id` to the `products` table.
 
 1. **How do you ensure placeOrder is atomic?** What happens if creating an order succeeds but creating a line item fails?
 
-2. **Why snapshot unitPrice instead of computing it from Product.price later?** What breaks if you don't snapshot?
+1. **Why snapshot unitPrice instead of computing it from Product.price later?** What breaks if you don't snapshot?
 
-3. **How do you validate that products exist and have sufficient inventory before creating line items?**
+1. **How do you validate that products exist and have sufficient inventory before creating line items?**
 
-4. **Should validation errors in placeOrder return a union error or a top-level error?** What's the user experience difference?
+1. **Should validation errors in placeOrder return a union error or a top-level error?** What's the user experience difference?
 
-5. **How do you compute Order.total efficiently?** Should you use a DataLoader? A database aggregate? Store it in the orders table?
+1. **How do you compute Order.total efficiently?** Should you use a DataLoader? A database aggregate? Store it in the orders table?
 
-6. **How does authorization work for orders?** How do you check if a user is allowed to view an order?
+1. **How does authorization work for orders?** How do you check if a user is allowed to view an order?
 
-7. **What happens if a product is deleted after an order is placed?** Should LineItem.product return null, or should product deletion be prevented?
+1. **What happens if a product is deleted after an order is placed?** Should LineItem.product return null, or should product deletion be prevented?
 
 ## Implementation Notes by Framework
 
@@ -388,17 +388,17 @@ try {
 
 1. **Forgetting transactions**: If you create an order and then fail to create line items, you have an orphaned order. Always use database transactions.
 
-2. **Not snapshotting prices**: If you store `productId` but not `unitPrice`, historical orders show current prices, not what the customer actually paid.
+1. **Not snapshotting prices**: If you store `productId` but not `unitPrice`, historical orders show current prices, not what the customer actually paid.
 
-3. **N+1 in computed fields**: If `Order.total` queries line items without DataLoader, paginating orders becomes O(n) queries.
+1. **N+1 in computed fields**: If `Order.total` queries line items without DataLoader, paginating orders becomes O(n) queries.
 
-4. **Exposing internal IDs in errors**: "Product prod-xyz not found" leaks that the product might have existed. Generic errors are safer.
+1. **Exposing internal IDs in errors**: "Product prod-xyz not found" leaks that the product might have existed. Generic errors are safer.
 
-5. **Allowing negative quantities**: Validate `quantity > 0` before creating line items.
+1. **Allowing negative quantities**: Validate `quantity > 0` before creating line items.
 
-6. **Not validating product existence**: Always check that `productId` references a real product before creating a line item.
+1. **Not validating product existence**: Always check that `productId` references a real product before creating a line item.
 
-7. **Authorization holes**: A seller shouldn't see orders just because one item is theirs—or should they? Define the business rule clearly.
+1. **Authorization holes**: A seller shouldn't see orders just because one item is theirs—or should they? Define the business rule clearly.
 
 ## What Success Looks Like
 
@@ -414,3 +414,11 @@ After completing this stage:
 - All operations are transactional—no partial writes
 
 The test suite will verify transactional behavior, authorization rules, and computed fields. Your implementation should handle edge cases (invalid products, empty orders, concurrent updates) gracefully.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:12
+```

@@ -70,11 +70,11 @@ DataFetchers for `Review.author` receive the `Review` object via `DataFetchingEn
 You'll add two new types to your schema and implement resolvers for:
 
 1. **User queries:** `user(id: ID!)` and `users` (return all users)
-2. **User relationships:** `User.reviews` (all reviews written by a user)
-3. **Product relationship:** `Product.reviews` (all reviews for a product)
-4. **Review relationships:** `Review.author` and `Review.product`
-5. **Computed field:** `Product.averageRating` (average of all review ratings)
-6. **Mutation:** `createReview(input: CreateReviewInput!)` (create a new review)
+1. **User relationships:** `User.reviews` (all reviews written by a user)
+1. **Product relationship:** `Product.reviews` (all reviews for a product)
+1. **Review relationships:** `Review.author` and `Review.product`
+1. **Computed field:** `Product.averageRating` (average of all review ratings)
+1. **Mutation:** `createReview(input: CreateReviewInput!)` (create a new review)
 
 Your database now has `users` and `reviews` tables. The seed data (full tier) includes multiple users with different roles and 100+ reviews across 50+ products, giving you realistic data to query.
 
@@ -89,3 +89,11 @@ The feature files verify:
 - Enforcing constraints (e.g., rating must be 1-5, product must exist)
 
 This stage establishes the foundation for authentication (Stage 11), where reviews will require the user to be logged in.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:06
+```

@@ -160,9 +160,9 @@ function requireRole(user: User | null, allowedRoles: Role[]): void {
 Most modern GraphQL APIs use JWTs (JSON Web Tokens):
 
 1. Client authenticates (login mutation, OAuth flow)
-2. Server returns a signed JWT containing user ID and role
-3. Client includes JWT in `Authorization: Bearer <token>` header
-4. Server verifies signature and extracts user identity
+1. Server returns a signed JWT containing user ID and role
+1. Client includes JWT in `Authorization: Bearer <token>` header
+1. Server verifies signature and extracts user identity
 
 For this stage, the test runner signs JWTs with a shared secret. Your server must verify tokens using the same secret and extract the user identity from the payload.
 
@@ -195,9 +195,9 @@ The test runner generates tokens for three pre-seeded users:
 Your authentication middleware should:
 
 1. Extract the token from the `Authorization: Bearer <token>` header
-2. Verify the signature using `JWT_SECRET`
-3. Decode the payload and populate `context.user` with `{ id: sub, email, name, role }`
-4. Set `context.user = null` if no token is present or verification fails (don't throw — let resolvers decide)
+1. Verify the signature using `JWT_SECRET`
+1. Decode the payload and populate `context.user` with `{ id: sub, email, name, role }`
+1. Set `context.user = null` if no token is present or verification fails (don't throw — let resolvers decide)
 
 In production, use asymmetric keys (RS256) or a dedicated auth service.
 
@@ -238,17 +238,17 @@ Choose based on your API's semantics. If the field is `String!` (non-null), you 
 
 1. **Where should authentication happen—before GraphQL or inside resolvers?** What are the trade-offs?
 
-2. **When should unauthorized access return `null` vs. throw an error?** How does this interact with nullable vs. non-nullable fields?
+1. **When should unauthorized access return `null` vs. throw an error?** How does this interact with nullable vs. non-nullable fields?
 
-3. **How do you test auth logic?** Do you test it via GraphQL queries, or unit test the auth functions separately?
+1. **How do you test auth logic?** Do you test it via GraphQL queries, or unit test the auth functions separately?
 
-4. **What goes in the JWT payload?** User ID? Role? Permissions? What are the security implications of including sensitive data?
+1. **What goes in the JWT payload?** User ID? Role? Permissions? What are the security implications of including sensitive data?
 
-5. **How do you handle token expiration?** Should expired tokens return 401, or just treat the user as unauthenticated?
+1. **How do you handle token expiration?** Should expired tokens return 401, or just treat the user as unauthenticated?
 
-6. **How do you implement field-level auth efficiently?** Do you check permissions in every field resolver?
+1. **How do you implement field-level auth efficiently?** Do you check permissions in every field resolver?
 
-7. **What's the difference between authentication errors and authorization errors?** Should they have different error codes?
+1. **What's the difference between authentication errors and authorization errors?** Should they have different error codes?
 
 ## Implementation Notes by Framework
 
@@ -387,17 +387,17 @@ DataFetcher<User> meDataFetcher = environment -> {
 
 1. **Putting auth logic in resolvers**: Resolvers should call business logic functions that do auth. Don't inline permission checks everywhere.
 
-2. **Not handling unauthenticated vs. unauthorized**: `401 Unauthorized` means "not authenticated." `403 Forbidden` means "authenticated but not authorized."
+1. **Not handling unauthenticated vs. unauthorized**: `401 Unauthorized` means "not authenticated." `403 Forbidden` means "authenticated but not authorized."
 
-3. **Leaking existence via error messages**: Don't say "Order not found" vs. "Unauthorized to view order." Both should return the same error to avoid leaking information.
+1. **Leaking existence via error messages**: Don't say "Order not found" vs. "Unauthorized to view order." Both should return the same error to avoid leaking information.
 
-4. **Overly permissive default**: Make the default "deny access" and explicitly allow operations. Never default to "allow."
+1. **Overly permissive default**: Make the default "deny access" and explicitly allow operations. Never default to "allow."
 
-5. **Ignoring field-level auth**: Just because a user can query `Product` doesn't mean they can see `Product.seller.email`.
+1. **Ignoring field-level auth**: Just because a user can query `Product` doesn't mean they can see `Product.seller.email`.
 
-6. **Hard-coding roles in resolvers**: Extract role checks to reusable functions or decorators.
+1. **Hard-coding roles in resolvers**: Extract role checks to reusable functions or decorators.
 
-7. **Not testing unauthenticated state**: Most tests authenticate by default. Explicitly test what happens when `context.user` is null.
+1. **Not testing unauthenticated state**: Most tests authenticate by default. Explicitly test what happens when `context.user` is null.
 
 ## What Success Looks Like
 
@@ -411,3 +411,11 @@ After completing this stage:
 - Error messages don't leak information about resources users can't access
 
 The test suite will verify these behaviors by making authenticated and unauthenticated requests, testing different roles, and attempting to access restricted fields. Your implementation should enforce all auth rules consistently.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:11
+```

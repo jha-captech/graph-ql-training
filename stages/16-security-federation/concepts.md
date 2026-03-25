@@ -36,13 +36,13 @@ These patterns are essential for production GraphQL APIs. Major platforms (GitHu
 
 1. **How do depth limits differ from complexity analysis?** Depth limits count nesting levels (e.g., max 7 deep). Complexity analysis assigns costs to fields and computes total cost. Depth is simpler but coarser; complexity is more precise but requires cost definitions for every field.
 
-2. **What is a persisted query and how does it improve security?** A persisted query uses a hash/ID instead of sending the full query string. The server has a pre-approved whitelist of queries. This prevents arbitrary queries, reduces payload size, and enables aggressive caching. Clients send `{"queryId": "abc123"}` instead of the full query.
+1. **What is a persisted query and how does it improve security?** A persisted query uses a hash/ID instead of sending the full query string. The server has a pre-approved whitelist of queries. This prevents arbitrary queries, reduces payload size, and enables aggressive caching. Clients send `{"queryId": "abc123"}` instead of the full query.
 
-3. **How does Apollo Federation differ from schema stitching?** Schema stitching merges schemas at the gateway level using delegation. Federation uses a spec (`@key`, `@external`, `_entities` query) where subgraphs define their entities and the gateway resolves them automatically. Federation is more declarative and scales better.
+1. **How does Apollo Federation differ from schema stitching?** Schema stitching merges schemas at the gateway level using delegation. Federation uses a spec (`@key`, `@external`, `_entities` query) where subgraphs define their entities and the gateway resolves them automatically. Federation is more declarative and scales better.
 
-4. **What is an entity in federation and how is it resolved?** An entity is a type shared across subgraphs, marked with `@key(fields: "id")`. The gateway can resolve an entity from any subgraph. When a subgraph needs data from another, the gateway calls `_entities` with the key, and the subgraph returns the extended data.
+1. **What is an entity in federation and how is it resolved?** An entity is a type shared across subgraphs, marked with `@key(fields: "id")`. The gateway can resolve an entity from any subgraph. When a subgraph needs data from another, the gateway calls `_entities` with the key, and the subgraph returns the extended data.
 
-5. **When should you reject a query vs. just log and monitor it?** Reject queries that violate hard limits (depth > 10, complexity > 5000, timeout > 30s) to protect the server. Log and monitor queries near thresholds (depth 8-10, complexity 3000-5000) to identify legitimate use cases vs. potential attacks before tightening limits.
+1. **When should you reject a query vs. just log and monitor it?** Reject queries that violate hard limits (depth > 10, complexity > 5000, timeout > 30s) to protect the server. Log and monitor queries near thresholds (depth 8-10, complexity 3000-5000) to identify legitimate use cases vs. potential attacks before tightening limits.
 
 ## Implementation Notes by Framework
 
@@ -310,3 +310,11 @@ In this stage, you're implementing security guardrails for the existing e-commer
 - Feature tests verify depth/complexity limits reject malicious queries
 - Feature tests demonstrate the `_service` introspection for federation
 - Conceptual tests explore how entity resolution would work (no full federation implementation required)
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:16
+```

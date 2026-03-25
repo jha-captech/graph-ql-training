@@ -26,19 +26,19 @@ After completing this stage, you should be able to answer:
 
 1. **What's the difference between a query and a mutation?** (Queries are read-only and can run in parallel; mutations have side effects and run serially at the top level)
 
-2. **Why use `CreateProductInput` instead of individual arguments like `title: String!`, `price: Float!`?** (Grouping arguments into input types is cleaner, extensible, and easier to validate)
+1. **Why use `CreateProductInput` instead of individual arguments like `title: String!`, `price: Float!`?** (Grouping arguments into input types is cleaner, extensible, and easier to validate)
 
-3. **What's the difference between `input` and `type` in SDL?** (Input types can only contain scalars, enums, and other input types—no object types or interfaces. They're for input, not output)
+1. **What's the difference between `input` and `type` in SDL?** (Input types can only contain scalars, enums, and other input types—no object types or interfaces. They're for input, not output)
 
-4. **Why are all fields in `UpdateProductInput` optional?** (Because you want partial updates—clients only send fields they're changing)
+1. **Why are all fields in `UpdateProductInput` optional?** (Because you want partial updates—clients only send fields they're changing)
 
-5. **Why do mutations return payload types instead of the entity directly?** (Room to evolve: add errors, metadata, or related data without breaking clients)
+1. **Why do mutations return payload types instead of the entity directly?** (Room to evolve: add errors, metadata, or related data without breaking clients)
 
-6. **What should happen if a client tries to create a product with invalid data?** (Return an error—either in the top-level `errors` array, or as a union member in the payload. Stage 10 covers this pattern)
+1. **What should happen if a client tries to create a product with invalid data?** (Return an error—either in the top-level `errors` array, or as a union member in the payload. Stage 10 covers this pattern)
 
-7. **How do you link a product to categories in `createProduct`?** (The `categoryIds` field in the input; your resolver inserts rows into the join table)
+1. **How do you link a product to categories in `createProduct`?** (The `categoryIds` field in the input; your resolver inserts rows into the join table)
 
-8. **If a mutation fails halfway through (e.g., database error), what should the response look like?** (Return an error in the `errors` array; optionally roll back the transaction)
+1. **If a mutation fails halfway through (e.g., database error), what should the response look like?** (Return an error in the `errors` array; optionally roll back the transaction)
 
 ## Implementation Notes by Framework
 
@@ -89,17 +89,25 @@ After completing this stage, you should be able to answer:
 A server that:
 
 1. Adds a `Mutation` root type with two mutations: `createProduct` and `updateProduct`
-2. Defines input types:
+1. Defines input types:
    - `CreateProductInput` with required fields: `title`, `price`, and optional: `description`, `categoryIds`
    - `UpdateProductInput` with all optional fields: `title`, `description`, `price`, `status`
-3. Defines payload types:
+1. Defines payload types:
    - `CreateProductPayload { product: Product }`
    - `UpdateProductPayload { product: Product }`
-4. Implements mutation resolvers:
+1. Implements mutation resolvers:
    - `createProduct`: inserts a new product, links it to categories if `categoryIds` provided, returns the created product
    - `updateProduct`: updates an existing product by ID, returns the updated product
-5. Handles errors gracefully (non-existent IDs, validation failures)
+1. Handles errors gracefully (non-existent IDs, validation failures)
 
 The database is set up with migrations and seed data from stage 03. Your mutations modify this data. Remember to handle the many-to-many relationship: when creating/updating a product with `categoryIds`, insert/update rows in the `product_categories` join table.
 
 You're NOT required to implement `deleteProduct` for this stage—two mutations are enough to teach the pattern. But feel free to add it as an exercise!
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:04
+```

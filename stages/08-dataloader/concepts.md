@@ -116,9 +116,9 @@ In data fetchers, get the loader: `env.getDataLoader("products").load(id)`.
 You'll refactor your existing resolvers to use DataLoader for:
 
 1. **Product-to-Category relationships:** Batch load categories for products
-2. **Product-to-Review relationships:** Batch load reviews for products
-3. **Review-to-User relationships:** Batch load authors for reviews
-4. **Review-to-Product relationships:** Batch load products for reviews (if needed)
+1. **Product-to-Review relationships:** Batch load reviews for products
+1. **Review-to-User relationships:** Batch load authors for reviews
+1. **Review-to-Product relationships:** Batch load products for reviews (if needed)
 
 Your schema remains identical to Stage 07. All tests from previous stages must still pass. The difference is performance: queries that previously executed dozens or hundreds of database queries now execute a handful.
 
@@ -150,3 +150,11 @@ This is the difference between a timeout and sub-second response.
 - **Not awaiting DataLoader promises:** In async runtimes, forgetting `await` breaks batching.
 
 This stage is critical for production readiness. A GraphQL server without DataLoader is a prototype, not a product.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:08
+```

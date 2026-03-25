@@ -42,8 +42,8 @@ Directives reduce resolver boilerplate by declaratively specifying cross-cutting
 Unlike REST APIs with `/v1/` and `/v2/` endpoints, GraphQL schemas evolve without versions:
 
 1. **Additive changes** (non-breaking): Add new types, fields, arguments
-2. **Deprecation** (non-breaking): Mark fields with `@deprecated`, keep them functional
-3. **Removal** (breaking): Only after all clients stop using deprecated fields
+1. **Deprecation** (non-breaking): Mark fields with `@deprecated`, keep them functional
+1. **Removal** (breaking): Only after all clients stop using deprecated fields
 
 This stage demonstrates evolution: the old `price: Float!` field is deprecated in favor of `pricing: Pricing!`, which includes currency and compare-at pricing. Old clients keep working; new clients use the better type.
 
@@ -59,13 +59,14 @@ Every custom scalar implements three functions:
    - `Money`: `cents integer → dollars float` (or keep as cents)
    - `EmailAddress`: `string → string` (passthrough, validation happens on input)
 
-2. **parseValue**: Variable value → internal value (from `variables` in request)
+1. **parseValue**: Variable value → internal value (from `variables` in request)
 
    - `DateTime`: `ISO 8601 string → Date object`
    - `Money`: `dollars float → cents integer`
    - `EmailAddress`: `string → validated string` (reject if invalid)
 
-3. **parseLiteral**: AST literal → internal value (from hardcoded value in query)
+1. **parseLiteral**: AST literal → internal value (from hardcoded value in query)
+
    - `DateTime`: `StringValue node → Date object`
    - `Money`: `IntValue or FloatValue → cents integer`
    - `EmailAddress`: `StringValue → validated string`
@@ -289,25 +290,25 @@ class Auth:
 1. **What three functions define a custom scalar?**
    `serialize` (output), `parseValue` (variable input), `parseLiteral` (literal input).
 
-2. **When would you use a custom scalar vs. input validation in the resolver?**
+1. **When would you use a custom scalar vs. input validation in the resolver?**
    Scalar: Validation applies everywhere the type is used (DRY). Resolver: Validation is context-specific (e.g., "this email must not already exist").
 
-3. **How do you handle money without floating-point errors?**
+1. **How do you handle money without floating-point errors?**
    Store as integer cents, use `Money` scalar to convert to/from dollars at the API boundary.
 
-4. **What constitutes a breaking change in GraphQL?**
+1. **What constitutes a breaking change in GraphQL?**
    Removing fields, changing field types, making nullable fields non-null, removing enum values that clients depend on.
 
-5. **How do you deprecate a field without breaking clients?**
+1. **How do you deprecate a field without breaking clients?**
    Add `@deprecated(reason: "Use newField instead")` to the old field. Keep it functional. Monitor usage. Remove after clients migrate.
 
-6. **Why use `DateTime` instead of `String` for timestamps?**
+1. **Why use `DateTime` instead of `String` for timestamps?**
    Guarantees format (ISO 8601), timezone handling, prevents clients from guessing the format.
 
-7. **How do schema directives differ from query directives?**
+1. **How do schema directives differ from query directives?**
    Schema directives (`@auth`, `@cacheControl`) affect resolver behavior and are implemented server-side. Query directives (`@include`, `@skip`) affect response shape and are part of the GraphQL spec.
 
-8. **Should `Money` serialize as cents or dollars?**
+1. **Should `Money` serialize as cents or dollars?**
    Depends. Cents (integer) eliminates precision issues but surprises clients expecting dollars. Dollars (float) is intuitive but can accumulate rounding errors. Document your choice clearly.
 
 ## Schema Evolution Example
@@ -340,10 +341,10 @@ Old clients using `price` still work. New clients use `pricing` for structured d
 1. **How do you migrate existing data when introducing a new scalar type?**
    Database stays the same (strings, integers). The scalar conversion happens at the GraphQL layer (serialize/parse functions). No database migration needed unless you're changing storage format.
 
-2. **Can a scalar reject invalid input?**
+1. **Can a scalar reject invalid input?**
    Yes. Throw an error in `parseValue` or `parseLiteral`. The GraphQL executor will catch it and return a validation error to the client.
 
-3. **How do you document custom scalars for clients?**
+1. **How do you document custom scalars for clients?**
    Use the `description` field in the scalar definition. Introspection exposes it. Also document in API docs with examples.
 
 ## Links
@@ -362,16 +363,16 @@ A server that:
    - `DateTime` — serializes to/from ISO 8601 strings (e.g., `"2025-01-15T10:00:00.000Z"`)
    - `EmailAddress` — validates email format on input, rejects malformed emails
    - `Money` — represents monetary amounts (stored as integer cents internally, serialized as needed)
-2. Replaces `String!` timestamps with `DateTime!` on all `createdAt` and `updatedAt` fields
-3. Replaces `String!` email with `EmailAddress!` on `User.email`
-4. Adds a `Pricing` type (`amount: Money!`, `currency: String!`, `compareAtAmount: Money`) to `Product`
-5. Deprecates `Product.price` in favor of `Product.pricing`
-6. Defines two custom directives:
+1. Replaces `String!` timestamps with `DateTime!` on all `createdAt` and `updatedAt` fields
+1. Replaces `String!` email with `EmailAddress!` on `User.email`
+1. Adds a `Pricing` type (`amount: Money!`, `currency: String!`, `compareAtAmount: Money`) to `Product`
+1. Deprecates `Product.price` in favor of `Product.pricing`
+1. Defines two custom directives:
    - `@auth(requires: Role!)` on `FIELD_DEFINITION` — declares which role is needed to access a field
    - `@cacheControl(maxAge: Int!)` on `FIELD_DEFINITION | OBJECT` — declares cache TTL
-7. Implements the `@auth` directive so it enforces role-based access (e.g., `users: [User!]! @auth(requires: ADMIN)`)
-8. Populates `Pricing` data from the `pricing` database table (added by migration 11)
-9. Keeps deprecated fields functional — old queries using `price` still work
+1. Implements the `@auth` directive so it enforces role-based access (e.g., `users: [User!]! @auth(requires: ADMIN)`)
+1. Populates `Pricing` data from the `pricing` database table (added by migration 11)
+1. Keeps deprecated fields functional — old queries using `price` still work
 
 The key evolution pattern: add new fields/types, deprecate old ones, but never break existing clients. The test suite verifies both the new typed fields and the deprecated fields still function.
 
@@ -383,3 +384,11 @@ The key evolution pattern: add new fields/types, deprecate old ones, but never b
 - **Breaking old clients**: Removing deprecated fields before clients migrate causes outages. Monitor usage before removing.
 - **Directive scope confusion**: Not all directives execute at runtime. `@deprecated` is metadata-only. `@auth` must be implemented.
 - **Over-engineering**: Don't create custom scalars for every string. Use them when validation or semantic meaning is important.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:15
+```

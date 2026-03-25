@@ -70,8 +70,16 @@ Variables are provided via `ExecutionInput.Builder.variables()`. Fragments and a
 You're not adding new resolvers or schema types. Instead, you're verifying that your GraphQL server correctly implements the query language specification. Your test suite will send queries with variables, aliases, fragments, and directives, and verify that the server:
 
 1. Validates variable types before execution
-2. Returns correctly aliased fields in the response
-3. Resolves both named and inline fragments
-4. Conditionally includes/excludes fields based on directives
+1. Returns correctly aliased fields in the response
+1. Resolves both named and inline fragments
+1. Conditionally includes/excludes fields based on directives
 
 This stage tests the _execution engine_, not your domain logic.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:05
+```

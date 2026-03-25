@@ -11,8 +11,8 @@ This stage introduces object-to-object relationships in GraphQL: how one type re
 Understanding the parent argument is crucial. When you query `product(id: "123") { categories { name } }`, GraphQL:
 
 1. Calls `Query.product` resolver with `args.id = "123"`, returns a product object
-2. For each `Product.categories` field requested, calls the `Product.categories` resolver with the **parent product object** as the first argument
-3. That resolver knows which product it's resolving for, and can look up that product's categories
+1. For each `Product.categories` field requested, calls the `Product.categories` resolver with the **parent product object** as the first argument
+1. That resolver knows which product it's resolving for, and can look up that product's categories
 
 This resolver chaining is how GraphQL builds the response tree. Each resolver is focused and composable—`Product.categories` doesn't care how the product was fetched, it just needs the product object.
 
@@ -35,15 +35,15 @@ After completing this stage, you should be able to answer:
    - `context`: Shared state (DB connection, auth, etc.)
    - `info`: Metadata about the query (rarely used in basic resolvers)
 
-2. **How does the `Product.categories` resolver know which product it's resolving for?** (It receives the product object as the parent argument)
+1. **How does the `Product.categories` resolver know which product it's resolving for?** (It receives the product object as the parent argument)
 
-3. **If you query `{ products { categories { products { title } } } }`, how many times is each resolver called?** (Count it: 1x for `Query.products`, N times for `Product.categories` where N = number of products, M times for `Category.products` where M = total number of category relationships)
+1. **If you query `{ products { categories { products { title } } } }`, how many times is each resolver called?** (Count it: 1x for `Query.products`, N times for `Product.categories` where N = number of products, M times for `Category.products` where M = total number of category relationships)
 
-4. **What should `Product.categories` return if a product has no categories?** (An empty array `[]`, not null—because the field type is `[Category!]!`, a non-null list)
+1. **What should `Product.categories` return if a product has no categories?** (An empty array `[]`, not null—because the field type is `[Category!]!`, a non-null list)
 
-5. **Why is the many-to-many relationship stored in a join table in the database?** (Because SQL databases don't have native many-to-many relationships; GraphQL doesn't care how you store it, only what you return)
+1. **Why is the many-to-many relationship stored in a join table in the database?** (Because SQL databases don't have native many-to-many relationships; GraphQL doesn't care how you store it, only what you return)
 
-6. **What happens if you query a relationship field but don't implement its resolver?** (Some frameworks default-resolve by property name; others return null or error)
+1. **What happens if you query a relationship field but don't implement its resolver?** (Some frameworks default-resolve by property name; others return null or error)
 
 ## Implementation Notes by Framework
 
@@ -94,14 +94,22 @@ After completing this stage, you should be able to answer:
 A server that:
 
 1. Adds a `Category` type with fields: `id`, `name`, `products`
-2. Adds `categories: [Category!]!` to the `Product` type
-3. Adds `category(id: ID!)` and `categories: [Category!]!` to the root `Query`
-4. Implements resolvers for:
+1. Adds `categories: [Category!]!` to the `Product` type
+1. Adds `category(id: ID!)` and `categories: [Category!]!` to the root `Query`
+1. Implements resolvers for:
    - `Query.category` and `Query.categories` — fetch categories from the database
    - `Product.categories` — given a product (parent), fetch its categories via the join table
    - `Category.products` — given a category (parent), fetch its products via the join table
-5. Handles nested queries like `products { categories { products { title } } }`
+1. Handles nested queries like `products { categories { products { title } } }`
 
 The database already has a `product_categories` join table connecting products to categories. Your job is to query it in your resolvers. This is the pattern for all relationships: parent object → query database → return related objects.
 
 Remember: each resolver is independent. `Product.categories` doesn't know if the product came from `Query.products` or `Query.product` or a nested query—it just receives a product object and returns categories. This composability is GraphQL's strength.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:03
+```

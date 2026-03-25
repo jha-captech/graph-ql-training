@@ -251,15 +251,15 @@ Use this to sanitize errors and add consistent structure.
 
 1. **When should an error go in the top-level `errors` array vs. a union result type?** What's the decision criteria?
 
-2. **What happens when a non-null field's resolver throws?** Trace the null propagation through the response tree.
+1. **What happens when a non-null field's resolver throws?** Trace the null propagation through the response tree.
 
-3. **How do you distinguish between "field is null because the data is null" vs. "field is null because an error occurred"?** Check the `errors` array and match by `path`.
+1. **How do you distinguish between "field is null because the data is null" vs. "field is null because an error occurred"?** Check the `errors` array and match by `path`.
 
-4. **What information should you include in error `extensions` in development vs. production?** Stack traces? Database error messages?
+1. **What information should you include in error `extensions` in development vs. production?** Stack traces? Database error messages?
 
-5. **Why use error codes instead of just messages?** What happens when you need to change a message for i18n?
+1. **Why use error codes instead of just messages?** What happens when you need to change a message for i18n?
 
-6. **How do you test error scenarios?** Do you trigger them with invalid inputs, or mock underlying layers to fail?
+1. **How do you test error scenarios?** Do you trigger them with invalid inputs, or mock underlying layers to fail?
 
 ## Implementation Notes by Framework
 
@@ -370,15 +370,15 @@ For union returns, use inheritance and return the appropriate subtype.
 
 1. **Exposing internal errors**: Never send raw database errors or stack traces to clients in production. Filter via `formatError`.
 
-2. **Overusing top-level errors for validation**: Validation failures are not exceptional—use union result types instead.
+1. **Overusing top-level errors for validation**: Validation failures are not exceptional—use union result types instead.
 
-3. **Inconsistent error codes**: Define error codes as constants/enums, not magic strings scattered through resolvers.
+1. **Inconsistent error codes**: Define error codes as constants/enums, not magic strings scattered through resolvers.
 
-4. **Forgetting error paths**: Include `path` in errors so clients know which field failed in complex queries.
+1. **Forgetting error paths**: Include `path` in errors so clients know which field failed in complex queries.
 
-5. **Non-null fields causing cascade failures**: Be conservative with `!`. A single non-null field error nulls the entire parent.
+1. **Non-null fields causing cascade failures**: Be conservative with `!`. A single non-null field error nulls the entire parent.
 
-6. **Poor error messages**: "Invalid input" is useless. "Email must be a valid email address" is actionable.
+1. **Poor error messages**: "Invalid input" is useless. "Email must be a valid email address" is actionable.
 
 ## What Success Looks Like
 
@@ -392,3 +392,11 @@ After completing this stage:
 - Both success and error paths are tested
 
 The test suite will verify all of these behaviors through scenarios that trigger validation errors, system errors, and partial successes. Your implementation should handle each case according to GraphQL best practices.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+bunx --cwd test-runner cucumber-js --tags @stage:10
+```
