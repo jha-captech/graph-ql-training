@@ -88,7 +88,10 @@ Feature: Schema Introspection for Relationships
               ofType {
                 kind
                 ofType {
-                  name
+                  kind
+                  ofType {
+                    name
+                  }
                 }
               }
             }
@@ -99,7 +102,8 @@ Feature: Schema Introspection for Relationships
     Then the response status should be 200
     Then the response "data.__type.fields[?(@.name=='products')].type.kind" should equal "NON_NULL"
     Then the response "data.__type.fields[?(@.name=='products')].type.ofType.kind" should equal "LIST"
-    Then the response "data.__type.fields[?(@.name=='products')].type.ofType.ofType.name" should equal "Product"
+    Then the response "data.__type.fields[?(@.name=='products')].type.ofType.ofType.kind" should equal "NON_NULL"
+    Then the response "data.__type.fields[?(@.name=='products')].type.ofType.ofType.ofType.name" should equal "Product"
 
   Scenario: Product categories field is non-null list of non-null Categories
     When I send a GraphQL query:
@@ -113,7 +117,10 @@ Feature: Schema Introspection for Relationships
               ofType {
                 kind
                 ofType {
-                  name
+                  kind
+                  ofType {
+                    name
+                  }
                 }
               }
             }
@@ -124,7 +131,8 @@ Feature: Schema Introspection for Relationships
     Then the response status should be 200
     Then the response "data.__type.fields[?(@.name=='categories')].type.kind" should equal "NON_NULL"
     Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.kind" should equal "LIST"
-    Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.ofType.name" should equal "Category"
+    Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.ofType.kind" should equal "NON_NULL"
+    Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.ofType.ofType.name" should equal "Category"
 
   Scenario: Query type has category and categories fields
     When I send a GraphQL query:
@@ -189,7 +197,10 @@ Feature: Schema Introspection for Relationships
               ofType {
                 kind
                 ofType {
-                  name
+                  kind
+                  ofType {
+                    name
+                  }
                 }
               }
             }
@@ -200,7 +211,8 @@ Feature: Schema Introspection for Relationships
     Then the response status should be 200
     Then the response "data.__type.fields[?(@.name=='categories')].type.kind" should equal "NON_NULL"
     Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.kind" should equal "LIST"
-    Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.ofType.name" should equal "Category"
+    Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.ofType.kind" should equal "NON_NULL"
+    Then the response "data.__type.fields[?(@.name=='categories')].type.ofType.ofType.ofType.name" should equal "Category"
 
   Scenario: Product type has 7 fields (including categories)
     When I send a GraphQL query:
