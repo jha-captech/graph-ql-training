@@ -9,11 +9,13 @@ vars:
 tasks:
   setup:
     desc: Run full setup (check prerequisites, init env, install test runner)
+    silent: true
     cmds:
       - ./setup.sh {{.STAGE | default ""}}
 
   env:init:
     desc: Create .env from local.env (will not overwrite existing .env)
+    silent: true
     cmds:
       - cp -n local.env .env
       - echo ".env created from local.env — edit as needed."
@@ -22,42 +24,50 @@ tasks:
 
   env:reset:
     desc: Overwrite .env with local.env defaults
+    silent: true
     cmds:
       - cp local.env .env
       - echo ".env reset to local.env defaults."
 
   migrate:up:
     desc: Run all pending migrations
+    silent: true
     cmds:
       - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" up
 
   migrate:down:
     desc: Roll back N migrations (default 1)
+    silent: true
     cmds:
       - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" down {{.N | default "1"}}
 
   migrate:goto:
     desc: Migrate to a specific version (e.g. task migrate:goto V=6)
+    silent: true
     cmds:
       - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" goto {{.V}}
 
   migrate:version:
     desc: Print current migration version
+    silent: true
     cmds:
       - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" version
 
   migrate:force:
     desc: Force set version without running migration (fixes dirty state)
+    silent: true
     cmds:
       - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" force {{.V}}
 
   migrate:create:
     desc: Create a new migration pair (e.g. task migrate:create NAME=create_users)
+    silent: true
     cmds:
       - migrate create -ext sql -dir {{.MIGRATIONS_DIR}} -seq {{.NAME}}
 
   db:reset:
     desc: Reset DB to clean state for a given stage (e.g. task db:reset STAGE=03)
+    silent: true
     vars:
       STAGE_MAP:
         sh: |
@@ -105,6 +115,7 @@ tasks:
 
   mocks:start:
     desc: Start all mock external services
+    silent: true
     cmds:
       - mockoon-cli start --data ./mocks/shipping.json --port 4010 &
       - mockoon-cli start --data ./mocks/tax.json --port 4011 &
@@ -113,5 +124,6 @@ tasks:
 
   mocks:stop:
     desc: Stop all mock external services
+    silent: true
     cmds:
       - mockoon-cli stop all
