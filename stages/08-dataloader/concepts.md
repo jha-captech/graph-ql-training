@@ -156,5 +156,5 @@ This stage is critical for production readiness. A GraphQL server without DataLo
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:08
+STAGE=08 bun run --cwd test-runner test:stage
 ```

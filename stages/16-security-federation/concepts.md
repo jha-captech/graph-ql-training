@@ -316,5 +316,5 @@ In this stage, you're implementing security guardrails for the existing e-commer
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:16
+STAGE=16 bun run --cwd test-runner test:stage
 ```

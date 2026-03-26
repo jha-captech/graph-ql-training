@@ -105,5 +105,5 @@ No database, no authentication, no complex types — just the foundational machi
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:01
+STAGE=01 bun run --cwd test-runner test:stage
 ```

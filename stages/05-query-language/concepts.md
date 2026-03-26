@@ -81,5 +81,5 @@ This stage tests the _execution engine_, not your domain logic.
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:05
+STAGE=05 bun run --cwd test-runner test:stage
 ```

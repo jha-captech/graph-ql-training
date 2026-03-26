@@ -398,5 +398,5 @@ The test suite will verify all of these behaviors through scenarios that trigger
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:10
+STAGE=10 bun run --cwd test-runner test:stage
 ```

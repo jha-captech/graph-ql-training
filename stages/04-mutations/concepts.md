@@ -109,5 +109,5 @@ You're NOT required to implement `deleteProduct` for this stage—two mutations 
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:04
+STAGE=04 bun run --cwd test-runner test:stage
 ```

@@ -111,5 +111,5 @@ Remember: each resolver is independent. `Product.categories` doesn't know if the
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:03
+STAGE=03 bun run --cwd test-runner test:stage
 ```

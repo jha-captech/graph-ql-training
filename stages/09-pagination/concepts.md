@@ -208,5 +208,5 @@ The test suite will verify all of these behaviors. Your implementation should pa
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:09
+STAGE=09 bun run --cwd test-runner test:stage
 ```

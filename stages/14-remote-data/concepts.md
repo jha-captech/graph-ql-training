@@ -295,5 +295,5 @@ The test suite will verify both successful API calls and graceful degradation wh
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:14
+STAGE=14 bun run --cwd test-runner test:stage
 ```

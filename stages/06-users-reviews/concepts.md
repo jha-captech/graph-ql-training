@@ -95,5 +95,5 @@ This stage establishes the foundation for authentication (Stage 11), where revie
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:06
+STAGE=06 bun run --cwd test-runner test:stage
 ```

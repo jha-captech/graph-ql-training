@@ -390,5 +390,5 @@ The key evolution pattern: add new fields/types, deprecate old ones, but never b
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:15
+STAGE=15 bun run --cwd test-runner test:stage
 ```

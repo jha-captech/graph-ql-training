@@ -216,5 +216,5 @@ The WebSocket endpoint should be at the same URL as your GraphQL HTTP endpoint (
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:13
+STAGE=13 bun run --cwd test-runner test:stage
 ```

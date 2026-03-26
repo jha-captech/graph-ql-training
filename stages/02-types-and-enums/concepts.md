@@ -129,5 +129,5 @@ The database is already set up with migrations and seed data. Your job is to rea
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:02
+STAGE=02 bun run --cwd test-runner test:stage
 ```

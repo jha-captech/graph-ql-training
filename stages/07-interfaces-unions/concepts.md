@@ -94,5 +94,5 @@ This stage tests your GraphQL execution engine's handling of abstract types, a c
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:07
+STAGE=07 bun run --cwd test-runner test:stage
 ```

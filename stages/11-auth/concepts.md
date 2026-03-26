@@ -417,5 +417,5 @@ The test suite will verify these behaviors by making authenticated and unauthent
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:11
+STAGE=11 bun run --cwd test-runner test:stage
 ```

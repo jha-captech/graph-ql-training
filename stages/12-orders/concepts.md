@@ -420,5 +420,5 @@ The test suite will verify transactional behavior, authorization rules, and comp
 From the repo root:
 
 ```bash
-bunx --cwd test-runner cucumber-js --tags @stage:12
+STAGE=12 bun run --cwd test-runner test:stage
 ```
