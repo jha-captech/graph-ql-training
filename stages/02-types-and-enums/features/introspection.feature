@@ -251,7 +251,10 @@ Feature: Schema Introspection for Types and Enums
               ofType {
                 kind
                 ofType {
-                  name
+                  kind
+                  ofType {
+                    name
+                  }
                 }
               }
             }
@@ -262,4 +265,5 @@ Feature: Schema Introspection for Types and Enums
     Then the response status should be 200
     Then the response "data.__type.fields[?(@.name=='products')].type.kind" should equal "NON_NULL"
     Then the response "data.__type.fields[?(@.name=='products')].type.ofType.kind" should equal "LIST"
-    Then the response "data.__type.fields[?(@.name=='products')].type.ofType.ofType.name" should equal "Product"
+    Then the response "data.__type.fields[?(@.name=='products')].type.ofType.ofType.kind" should equal "NON_NULL"
+    Then the response "data.__type.fields[?(@.name=='products')].type.ofType.ofType.ofType.name" should equal "Product"
