@@ -1,3 +1,9 @@
+-- +goose Up
+ALTER TABLE products ADD COLUMN seller_id TEXT REFERENCES users(id);
+
+CREATE INDEX IF NOT EXISTS idx_products_seller_id ON products(seller_id);
+
+-- +goose Down
 -- SQLite does not support DROP COLUMN before 3.35.0.
 -- For broad compatibility, recreate the table without seller_id.
 CREATE TABLE products_backup (

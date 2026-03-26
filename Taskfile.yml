@@ -33,37 +33,37 @@ tasks:
     desc: Run all pending migrations
     silent: true
     cmds:
-      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" up
+      - goose -dir {{.MIGRATIONS_DIR}} sqlite3 {{.DB_FILE}} up
 
   migrate:down:
-    desc: Roll back N migrations (default 1)
+    desc: Roll back one migration
     silent: true
     cmds:
-      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" down {{.N | default "1"}}
+      - goose -dir {{.MIGRATIONS_DIR}} sqlite3 {{.DB_FILE}} down
 
-  migrate:goto:
-    desc: Migrate to a specific version (e.g. task migrate:goto V=6)
+  migrate:up-to:
+    desc: Migrate up to a specific version (e.g. task migrate:up-to V=6)
     silent: true
     cmds:
-      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" goto {{.V}}
+      - goose -dir {{.MIGRATIONS_DIR}} sqlite3 {{.DB_FILE}} up-to {{.V}}
 
   migrate:version:
     desc: Print current migration version
     silent: true
     cmds:
-      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" version
+      - goose -dir {{.MIGRATIONS_DIR}} sqlite3 {{.DB_FILE}} version
 
-  migrate:force:
-    desc: Force set version without running migration (fixes dirty state)
+  migrate:status:
+    desc: Show status of all migrations
     silent: true
     cmds:
-      - migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" force {{.V}}
+      - goose -dir {{.MIGRATIONS_DIR}} sqlite3 {{.DB_FILE}} status
 
   migrate:create:
-    desc: Create a new migration pair (e.g. task migrate:create NAME=create_users)
+    desc: Create a new migration (e.g. task migrate:create NAME=create_users)
     silent: true
     cmds:
-      - migrate create -ext sql -dir {{.MIGRATIONS_DIR}} -seq {{.NAME}}
+      - goose -dir {{.MIGRATIONS_DIR}} -s create {{.NAME}} sql
 
   db:reset:
     desc: Reset DB to clean state for a given stage (e.g. task db:reset STAGE=03)
@@ -100,7 +100,7 @@ tasks:
         fi
         rm -f {{.DB_FILE}}
         if [ "{{.STAGE_MAP}}" != "0" ]; then
-          migrate -source file://{{.MIGRATIONS_DIR}} -database "sqlite3://{{.DB_FILE}}" goto {{.STAGE_MAP}}
+          goose -dir {{.MIGRATIONS_DIR}} sqlite3 {{.DB_FILE}} up-to {{.STAGE_MAP}}
           if [ "{{.SEED_TIER}}" != "none" ]; then
             for f in {{.SEED_DIR}}/base/*.sql; do sqlite3 {{.DB_FILE}} < "$f"; done
             if [ "{{.SEED_TIER}}" = "full" ] || [ "{{.SEED_TIER}}" = "orders" ]; then

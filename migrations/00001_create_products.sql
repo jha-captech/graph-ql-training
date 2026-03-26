@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -10,3 +11,6 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+
+-- +goose Down
+DROP TABLE IF EXISTS products;

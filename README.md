@@ -6,13 +6,13 @@ A progressive, language-agnostic GraphQL curriculum. You receive schemas, Gherki
 
 Install these tools before starting:
 
-| Tool                                                        | Purpose             | Install                        |
-| ----------------------------------------------------------- | ------------------- | ------------------------------ |
-| [Bun](https://bun.sh/) 1.0+                                 | Test runner         | `brew install oven-sh/bun/bun` |
-| [SQLite](https://sqlite.org/) 3.35+                         | Database            | `brew install sqlite3`         |
-| [golang-migrate](https://github.com/golang-migrate/migrate) | Database migrations | `brew install golang-migrate`  |
-| [go-task](https://taskfile.dev/)                            | Task runner         | `brew install go-task`         |
-| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+)         | External API mocks  | `bun install -g @mockoon/cli`  |
+| Tool                                                | Purpose             | Install                        |
+| --------------------------------------------------- | ------------------- | ------------------------------ |
+| [Bun](https://bun.sh/) 1.0+                         | Test runner         | `brew install oven-sh/bun/bun` |
+| [SQLite](https://sqlite.org/) 3.35+                 | Database            | `brew install sqlite3`         |
+| [goose](https://github.com/pressly/goose)           | Database migrations | `brew install goose`           |
+| [go-task](https://taskfile.dev/)                    | Task runner         | `brew install go-task`         |
+| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+) | External API mocks  | `bun install -g @mockoon/cli`  |
 
 ## Quick Start
 
@@ -164,9 +164,10 @@ task env:reset             # Reset .env to defaults
 # Database
 task db:reset STAGE=06     # Reset DB for a specific stage (drops + migrates + seeds)
 task migrate:up            # Run all pending migrations
-task migrate:down N=1      # Roll back N migrations
-task migrate:goto V=5      # Migrate to specific version
+task migrate:down          # Roll back one migration
+task migrate:up-to V=5     # Migrate up to specific version
 task migrate:version       # Print current version
+task migrate:status        # Show status of all migrations
 
 # Mock APIs (stage 14+)
 task mocks:start           # Start shipping, tax, currency mocks
@@ -231,9 +232,9 @@ After evaluating todo apps, blogs, social media, and library systems, a simplifi
 
 SQLite is a file — zero infrastructure, no Docker, no connection strings, no server process. Every language has bindings. Students focus on GraphQL from day one, not database setup.
 
-### Why golang-migrate
+### Why goose
 
-Language-agnostic standalone binary — no runtime dependency on Go, Node, or Java. Plain SQL up/down files with no DSL or ORM coupling. The `goto V` command maps perfectly to our staged curriculum. Alternatives like Flyway (Java dependency), dbmate (no `goto`), or Atlas (declarative complexity we don't need) were considered.
+Language-agnostic standalone binary — no runtime dependency on Go, Node, or Java. Single-file SQL migrations with `-- +goose Up` / `-- +goose Down` annotations keep up and down logic together. The `up-to V` command maps to our staged curriculum. Sequential numbering avoids timestamp merge conflicts in a training repo.
 
 ### Why Mockoon for External API Mocks
 

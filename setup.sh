@@ -44,11 +44,11 @@ else
   errors=$((errors + 1))
 fi
 
-# golang-migrate
-if command -v migrate &>/dev/null; then
-  ok "golang-migrate"
+# goose
+if command -v goose &>/dev/null; then
+  ok "goose"
 else
-  fail "golang-migrate not found (brew install golang-migrate)"
+  fail "goose not found (brew install goose)"
   errors=$((errors + 1))
 fi
 
