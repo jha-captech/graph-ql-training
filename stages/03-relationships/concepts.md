@@ -45,43 +45,6 @@ After completing this stage, you should be able to answer:
 
 1. **What happens if you query a relationship field but don't implement its resolver?** (Some frameworks default-resolve by property name; others return null or error)
 
-## Implementation Notes by Framework
-
-**graphql-js (TypeScript/JavaScript)**:
-
-- Resolvers are functions in a resolver map or passed to the schema
-- The parent argument is typically called `parent` or `source`
-- For `Product.categories`, add: `Product: { categories: (parent, args, context) => fetchCategoriesForProduct(parent.id, context.db) }`
-- Default behavior: if no resolver is provided, GraphQL returns the property with the same name from parent
-
-**gqlgen (Go)**:
-
-- Field resolvers are methods: `func (r *productResolver) Categories(ctx context.Context, obj *model.Product) ([]*model.Category, error)`
-- `obj` is the parent product; `ctx` contains context including DB
-- Use dataloaders pattern: `r.CategoryLoader.LoadMany(ctx, obj.CategoryIDs)`
-- Join tables: query the join table in your resolver
-
-**Hot Chocolate (.NET)**:
-
-- Resolvers can be methods on the parent type or separate resolver classes
-- Use `[Parent]` attribute to receive the parent object explicitly
-- For many-to-many: query the join table or use EF Core navigation properties
-- Example: `public async Task<List<Category>> GetCategories([Parent] Product product, [Service] IDbContextFactory factory)`
-
-**Strawberry (Python)**:
-
-- Define resolver methods on your type class: `@strawberry.field`
-- First param is `self` (the parent object), then `info: strawberry.types.Info`
-- Access context via `info.context`
-- For many-to-many: query join table in resolver or use SQLAlchemy relationships
-
-**graphql-java (Java)**:
-
-- Field resolvers are `DataFetcher` implementations
-- The parent is in `DataFetchingEnvironment.getSource()`
-- Example: `DataFetcher<List<Category>> categoriesResolver = env -> fetchCategories(env.getSource().getId())`
-- Use DataLoader for batching (Stage 08)
-
 ## Links to Official Documentation
 
 - [Execution](https://graphql.org/learn/execution/) — How resolvers chain and the resolver signature

@@ -33,43 +33,6 @@ After completing this stage, you should be able to answer:
 1. **What happens when a client queries `product(id: "nonexistent")`?** (Should return null, not an error)
 1. **What's the difference between returning `null` and throwing an error in a resolver?**
 
-## Implementation Notes by Framework
-
-**graphql-js (TypeScript/JavaScript)**:
-
-- Enums are defined with `GraphQLEnumType` or in SDL with `enum ProductStatus { ... }`
-- Resolvers receive `(parent, args, context, info)` as arguments
-- Put your database connection in context: `context: { db: sqliteConnection }`
-- Non-null is `new GraphQLNonNull(GraphQLString)` or `String!` in SDL
-
-**gqlgen (Go)**:
-
-- Enums in SDL generate Go `const` declarations
-- Resolvers are methods on your resolver struct
-- Store DB in resolver struct: `type Resolver struct { DB *sql.DB }`
-- Use `sql.NullString` for nullable fields like `description`
-
-**Hot Chocolate (.NET)**:
-
-- Enums are C# enums with `[GraphQLType]` attribute
-- Resolvers are methods on your query class or separate resolver classes
-- Inject dependencies (like DB context) via constructor or `[Service]` parameters
-- Nullable fields: use `string?` in C# 8+
-
-**Strawberry (Python)**:
-
-- Enums are `strawberry.enum` wrapping Python `Enum` classes
-- Resolvers are methods on your type class or standalone functions with `@strawberry.field`
-- Pass DB connection via `strawberry.types.Info.context`
-- Nullable fields: use `Optional[str]` type hints
-
-**graphql-java (Java)**:
-
-- Enums: `GraphQLEnumType.newEnum().name("ProductStatus").value("DRAFT")...build()`
-- Resolvers are `DataFetcher<Product>` implementations
-- Store DB connection in `DataFetchingEnvironment.getContext()`
-- Nullable fields: use nullable types or Optional<String>
-
 ## Links to Official Documentation
 
 - [Schemas and Types](https://graphql.org/learn/schema/) — Core type system concepts
@@ -82,30 +45,7 @@ After completing this stage, you should be able to answer:
 
 Your server needs to connect to a SQLite database file. The file path is set by the `DB_FILE` environment variable (default: `graphql_training.db` in the project root). Run `task db:reset STAGE=02` to create and seed it.
 
-Pass the database connection through GraphQL's **context object** so all resolvers can access it:
-
-```typescript
-// TypeScript/JavaScript example
-import Database from "better-sqlite3";
-const db = new Database(process.env.DB_FILE || "graphql_training.db");
-
-// Pass db via context to all resolvers
-const server = new ApolloServer({
-  schema,
-  context: () => ({ db }),
-});
-```
-
-```go
-// Go example
-db, _ := sql.Open("sqlite3", os.Getenv("DB_FILE"))
-```
-
-```python
-# Python example
-import sqlite3
-db = sqlite3.connect(os.environ.get("DB_FILE", "graphql_training.db"))
-```
+Pass the database connection through GraphQL's **context object** so all resolvers can access it.
 
 **Important**: Prices in the database are stored as **integers in cents** (e.g., `12999` = $129.99). The schema defines `price: Float!`, so your resolver returns the raw integer value. Don't convert to dollars — the test suite expects cent values.
 

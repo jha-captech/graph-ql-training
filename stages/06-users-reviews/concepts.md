@@ -36,28 +36,6 @@ This approach mirrors real domain modeling: new features often require multiple 
 - **How does the `createReview` mutation know which user is the author?** Should the user ID be in the input, or derived from authentication?
 - **Why are `createdAt` and `updatedAt` stored as `String!` instead of a DateTime scalar?** What are the tradeoffs?
 
-## Implementation Notes
-
-### graphql-js (JavaScript/TypeScript)
-
-The resolver for `Review.author` receives the review as the parent argument and can access `review.user_id` (or similar) to fetch the user. Use a DataLoader (introduced in Stage 08) to batch author fetches. Computed fields like `Product.averageRating` can use raw SQL (`SELECT AVG(rating)...`) or an ORM aggregate method. For timestamps, store them as ISO 8601 strings or convert from database timestamp types.
-
-### gqlgen (Go)
-
-Generated resolvers for `Review.Author(ctx, obj)` receive the review object. Map the `user_id` field from the database row to fetch the user. For `averageRating`, run a database query or compute in-memory. Use `time.Time` in Go structs and format as RFC3339 strings in resolvers.
-
-### Hot Chocolate (.NET)
-
-Use `[Parent]` attribute in resolvers to access the parent object. For `Review`, the author resolver receives the `Review` object and queries by `UserId`. Computed fields like `averageRating` can be resolver methods on the `Product` class. EF Core supports `.Average()` for aggregates. Timestamps can be `DateTime` in .NET and serialized as ISO 8601 strings.
-
-### Strawberry (Python)
-
-Use `strawberry.field(resolver=...)` for relationships. The resolver function receives the parent object (e.g., `review: Review`) and can access `review.user_id`. For computed fields, define a resolver that queries the database. Use `datetime` objects in Python and serialize them as ISO 8601 strings via `.isoformat()`.
-
-### graphql-java (Java)
-
-DataFetchers for `Review.author` receive the `Review` object via `DataFetchingEnvironment.getSource()`. Cast it to your `Review` class and access the `userId` field. For computed fields, query the database or compute from loaded data. Use `java.time.Instant` or `LocalDateTime` for timestamps and format as ISO 8601 strings.
-
 ## Official GraphQL Documentation
 
 - [Schemas and Types - Object Types](https://graphql.org/learn/schema/#object-types)

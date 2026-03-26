@@ -203,49 +203,11 @@ Clients can switch on `extensions.code` instead of parsing strings.
 
 ### Validation Layer
 
-Don't validate in resolvers—extract validation to a separate layer:
-
-```typescript
-// Bad: validation in resolver
-async createProduct(parent, args, context) {
-  if (!args.input.title) {
-    throw new Error("Title required");
-  }
-  // ...
-}
-
-// Good: validation layer
-async createProduct(parent, args, context) {
-  const validation = validateProductInput(args.input);
-  if (!validation.success) {
-    return { __typename: "ValidationError", ...validation.error };
-  }
-  // ...
-}
-```
-
-This keeps resolvers focused on orchestration, not business rules.
+Don't validate in resolvers—extract validation to a separate layer. Keep resolvers focused on orchestration, not business rules. A validation function should return structured results that can be mapped to union error types.
 
 ### Error Formatting Hook
 
-Most GraphQL servers provide a hook to format errors before sending them to clients:
-
-```typescript
-const server = new ApolloServer({
-  schema,
-  formatError: (error) => {
-    // Remove stack traces in production
-    if (process.env.NODE_ENV === "production") {
-      delete error.extensions.exception;
-    }
-    // Add error codes
-    error.extensions.code = classifyError(error);
-    return error;
-  },
-});
-```
-
-Use this to sanitize errors and add consistent structure.
+Most GraphQL servers provide a hook to format errors before sending them to clients. Use this to sanitize errors (remove stack traces in production) and add consistent structure (error codes, timestamps).
 
 ## Key Questions
 
@@ -260,105 +222,6 @@ Use this to sanitize errors and add consistent structure.
 1. **Why use error codes instead of just messages?** What happens when you need to change a message for i18n?
 
 1. **How do you test error scenarios?** Do you trigger them with invalid inputs, or mock underlying layers to fail?
-
-## Implementation Notes by Framework
-
-### graphql-js (TypeScript/JavaScript)
-
-Throw `GraphQLError` for top-level errors:
-
-```typescript
-import { GraphQLError } from "graphql";
-
-throw new GraphQLError("Product not found", {
-  extensions: { code: "NOT_FOUND" },
-});
-```
-
-For union errors, return objects:
-
-```typescript
-if (!isValid) {
-  return {
-    __typename: "ValidationError",
-    message: "Invalid input",
-    field: "title",
-    code: "REQUIRED_FIELD",
-  };
-}
-return {
-  __typename: "CreateProductSuccess",
-  product: newProduct,
-};
-```
-
-### gqlgen (Go)
-
-Define error types that implement the error interface:
-
-```go
-type ValidationError struct {
-    Message string
-    Field   *string
-    Code    string
-}
-```
-
-Resolvers return these types directly. gqlgen handles the union discrimination.
-
-### Strawberry (Python)
-
-Use Python's union syntax:
-
-```python
-@strawberry.type
-class ValidationError:
-    message: str
-    field: Optional[str]
-    code: str
-
-CreateProductResult = Union[CreateProductSuccess, ValidationError]
-
-@strawberry.mutation
-def create_product(self, input: CreateProductInput) -> CreateProductResult:
-    if not input.title:
-        return ValidationError(
-            message="Title is required",
-            field="title",
-            code="REQUIRED_FIELD"
-        )
-    return CreateProductSuccess(product=new_product)
-```
-
-### Hot Chocolate (.NET)
-
-Hot Chocolate has built-in error handling via exceptions with error filters:
-
-```csharp
-public class ValidationError {
-    public string Message { get; set; }
-    public string? Field { get; set; }
-    public string Code { get; set; }
-}
-
-[UnionType("CreateProductResult")]
-public interface ICreateProductResult { }
-
-public class CreateProductSuccess : ICreateProductResult {
-    public Product Product { get; set; }
-}
-```
-
-### graphql-java (Java/Kotlin)
-
-Throw `GraphQLException` or implement `GraphQLError` interface:
-
-```java
-throw new GraphQLException("Product not found",
-    Map.of("code", "NOT_FOUND"));
-```
-
-For union returns, use inheritance and return the appropriate subtype.
 
 ## Official Documentation
 

@@ -34,28 +34,6 @@ While the server schema remains unchanged from Stage 04, your resolver implement
 - **How do `@include` and `@skip` differ?** Can you use both on the same field?
 - **Do directives affect the schema, or only the query execution?** Can you define custom directives?
 
-## Implementation Notes
-
-### graphql-js (JavaScript/TypeScript)
-
-Variables are passed as the second argument to `execute()` or `graphql()`. Aliases and fragments are handled automatically by the execution engine—no resolver changes needed. Directives `@include` and `@skip` are built-in; custom directives require registering them in the schema and implementing resolution logic.
-
-### gqlgen (Go)
-
-Variables map to resolver argument structs. Fragments and aliases are handled by the generated code. `@include`/`@skip` work out of the box. For custom directives, use the `directive` configuration in `gqlgen.yml` to point to Go functions.
-
-### Hot Chocolate (.NET)
-
-Variables are automatically bound to resolver parameters. Fragments and aliases require no special handling. Built-in directives work automatically. Custom directives are classes implementing `DirectiveType` and registered in the schema builder.
-
-### Strawberry (Python)
-
-Variables are passed to the `execute` function. Aliases and fragments are handled by the execution layer. Directives `@include`/`@skip` are built-in. Custom directives use the `@strawberry.directive` decorator.
-
-### graphql-java (Java)
-
-Variables are provided via `ExecutionInput.Builder.variables()`. Fragments and aliases are part of the query parsing and execution—no resolver changes needed. Built-in directives work automatically; custom directives implement `SchemaDirectiveWiring`.
-
 ## Official GraphQL Documentation
 
 - [Queries and Mutations - Variables](https://graphql.org/learn/queries/#variables)

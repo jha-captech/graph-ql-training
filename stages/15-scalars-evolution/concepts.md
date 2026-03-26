@@ -92,7 +92,7 @@ Directives can be **schema directives** (affect schema behavior) or **query dire
 
 Schema directives like `@auth` and `@cacheControl` are implemented via:
 
-- **Executable schema transformation** (graphql-tools): Wrap resolvers at schema-build time
+- **Executable schema transformation**: Wrap resolvers at schema-build time
 - **Custom validation rules**: Check auth during validation phase
 - **Middleware/plugins**: Intercept resolver execution
 
@@ -100,17 +100,9 @@ Schema directives like `@auth` and `@cacheControl` are implemented via:
 type Query {
   users: [User!]! @auth(requires: ADMIN)
 }
-
-# Implementation (simplified):
-const authDirective = (next, source, args, context, info) => {
-  const directive = info.fieldNodes[0].directives.find(d => d.name.value === 'auth');
-  const requiredRole = directive.arguments[0].value.value;
-  if (context.user.role !== requiredRole) {
-    throw new Error('Unauthorized');
-  }
-  return next(source, args, context, info);
-};
 ```
+
+At runtime, the server intercepts field resolution for directives like `@auth`, checks the user's role from the request context, and rejects unauthorized access before the resolver executes.
 
 ### Schema Evolution Strategy
 
@@ -126,164 +118,6 @@ const authDirective = (next, source, args, context, info) => {
 | Rename field      | Yes       | Add new field, deprecate old             |
 
 This stage demonstrates the **change field type** pattern: `price: Float!` is deprecated, `pricing: Pricing!` is added.
-
-## Implementation Notes
-
-### graphql-js / Apollo Server (TypeScript/JavaScript)
-
-Use `graphql-scalars` package for common scalars:
-
-```typescript
-import { DateTimeResolver, EmailAddressResolver } from "graphql-scalars";
-import { GraphQLScalarType, Kind } from "graphql";
-
-const resolvers = {
-  DateTime: DateTimeResolver,
-  EmailAddress: EmailAddressResolver,
-
-  Money: new GraphQLScalarType({
-    name: "Money",
-    description: "Monetary amount in cents",
-    serialize(value: number) {
-      return value / 100; // cents to dollars for output
-    },
-    parseValue(value: number) {
-      return Math.round(value * 100); // dollars to cents
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.FLOAT || ast.kind === Kind.INT) {
-        return Math.round(parseFloat(ast.value) * 100);
-      }
-      return null;
-    },
-  }),
-};
-```
-
-Custom directives with `@graphql-tools/schema`:
-
-```typescript
-import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils";
-
-function authDirectiveTransformer(schema, directiveName) {
-  return mapSchema(schema, {
-    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
-      const authDirective = getDirective(
-        schema,
-        fieldConfig,
-        directiveName,
-      )?.[0];
-      if (authDirective) {
-        const { requires } = authDirective;
-        const originalResolve = fieldConfig.resolve;
-        fieldConfig.resolve = async (source, args, context, info) => {
-          if (context.user?.role !== requires) {
-            throw new Error("Unauthorized");
-          }
-          return originalResolve(source, args, context, info);
-        };
-      }
-      return fieldConfig;
-    },
-  });
-}
-```
-
-### gqlgen (Go)
-
-Define custom scalars in `gqlgen.yml`:
-
-```yaml
-models:
-  DateTime:
-    model: time.Time
-  Money:
-    model: int # cents
-  EmailAddress:
-    model: github.com/yourorg/types.EmailAddress
-```
-
-Implement serialization:
-
-```go
-func MarshalDateTime(t time.Time) graphql.Marshaler {
-    return graphql.WriterFunc(func(w io.Writer) {
-        w.Write([]byte(strconv.Quote(t.Format(time.RFC3339))))
-    })
-}
-
-func UnmarshalDateTime(v interface{}) (time.Time, error) {
-    str, ok := v.(string)
-    if !ok {
-        return time.Time{}, errors.New("invalid DateTime")
-    }
-    return time.Parse(time.RFC3339, str)
-}
-```
-
-### Hot Chocolate (.NET)
-
-Register scalars:
-
-```csharp
-services
-    .AddGraphQLServer()
-    .AddType<DateTimeType>()
-    .AddType<EmailAddressType>()
-    .AddType(new ScalarType<int, StringValueNode>(
-        "Money",
-        serialize: cents => cents / 100.0,
-        parseValue: dollars => (int)(dollars * 100)));
-```
-
-Directives:
-
-```csharp
-public class AuthDirective : DirectiveType
-{
-    protected override void Configure(IDirectiveTypeDescriptor descriptor)
-    {
-        descriptor.Name("auth");
-        descriptor.Location(DirectiveLocation.FieldDefinition);
-        descriptor.Argument("requires").Type<NonNullType<RoleType>>();
-    }
-}
-```
-
-### Strawberry (Python)
-
-Define scalars:
-
-```python
-from datetime import datetime
-import strawberry
-
-DateTime = strawberry.scalar(
-    datetime,
-    serialize=lambda v: v.isoformat(),
-    parse_value=lambda v: datetime.fromisoformat(v)
-)
-
-@strawberry.scalar
-class Money:
-    @staticmethod
-    def serialize(value: int) -> float:
-        return value / 100.0
-
-    @staticmethod
-    def parse_value(value: float) -> int:
-        return int(value * 100)
-```
-
-Directives:
-
-```python
-from strawberry.schema_directive import Location
-
-@strawberry.schema_directive(locations=[Location.FIELD_DEFINITION])
-class Auth:
-    requires: Role
-```
 
 ## Key Questions
 

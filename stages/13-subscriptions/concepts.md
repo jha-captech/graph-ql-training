@@ -67,58 +67,11 @@ Client                          Server
 
 Most production subscriptions use filtering. The argument (`orderId`) is captured when the subscription is created and used to filter published events.
 
-## Implementation Notes
+## Scaling Subscriptions
 
-### graphql-js / Apollo Server (TypeScript/JavaScript)
+In-memory pub/sub only works for single-server deployments. For production:
 
-- Use `graphql-subscriptions` package for in-memory pub/sub
-- Subscription resolvers return an `AsyncIterator`
-- `pubsub.publish('ORDER_STATUS_CHANGED', payload)` in mutation resolvers
-- `pubsub.asyncIterator(['ORDER_STATUS_CHANGED'])` in subscription resolvers
-- Filter using `withFilter()` wrapper
-
-```javascript
-const pubsub = new PubSub();
-
-// In mutation resolver:
-await updateOrderStatus(orderId, newStatus);
-pubsub.publish("ORDER_STATUS_CHANGED", { orderStatusChanged: order });
-
-// In subscription resolver:
-Subscription: {
-  orderStatusChanged: {
-    subscribe: withFilter(
-      () => pubsub.asyncIterator(["ORDER_STATUS_CHANGED"]),
-      (payload, variables) =>
-        payload.orderStatusChanged.id === variables.orderId,
-    );
-  }
-}
-```
-
-### gqlgen (Go)
-
-- Define subscription resolvers as channel generators
-- Use `go-channels` or a pub/sub library
-- Filtering happens in the resolver logic
-
-### Hot Chocolate (.NET)
-
-- Use `[Subscribe]` attribute on subscription resolvers
-- Return `IAsyncEnumerable<T>` or `IObservable<T>`
-- Use `[Topic]` for pub/sub routing
-
-### Strawberry (Python)
-
-- Use `@strawberry.type` with subscription methods
-- Return `AsyncGenerator` from subscription resolvers
-- Integrate with Redis pub/sub for multi-instance deployments
-
-### Scaling Subscriptions
-
-In-memory pub/sub (like `PubSub` from `graphql-subscriptions`) only works for single-server deployments. For production:
-
-- **Redis pub/sub**: `graphql-redis-subscriptions` shares events across server instances
+- **Redis pub/sub**: Shares events across server instances
 - **Message queues**: RabbitMQ, Kafka for reliable event delivery
 - **Managed services**: AWS AppSync, Hasura, Apollo Router handle subscription infrastructure
 
@@ -128,7 +81,7 @@ In-memory pub/sub (like `PubSub` from `graphql-subscriptions`) only works for si
    WebSocket, because HTTP is request-response only. Subscriptions need bidirectional, persistent connections.
 
 1. **Where does the pub/sub system fit in your architecture?**
-   Between mutation resolvers (publishers) and subscription resolvers (subscribers). The mutation calls `pubsub.publish()`, the subscription calls `pubsub.asyncIterator()`.
+   Between mutation resolvers (publishers) and subscription resolvers (subscribers). The mutation publishes an event to a topic, and the subscription listens on that topic via an async iterator or channel.
 
 1. **How do you filter subscription events?**
    Capture filter arguments (like `orderId`) when the subscription is created. In the resolver, compare the event payload to the captured arguments before sending to the client.

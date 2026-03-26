@@ -50,38 +50,6 @@ After completing this stage, you should be able to answer:
 1. **What is a resolver, and what does the `hello` field's resolver do?**
 1. **Why does GraphQL serve over HTTP POST instead of GET?** (Consider: queries can be large and contain variables)
 
-## Implementation Notes by Framework
-
-**graphql-js (TypeScript/JavaScript)**:
-
-- Schema is defined using `GraphQLSchema` and `GraphQLObjectType` (code-first), or `buildSchema()` from SDL (schema-first)
-- Resolvers are functions passed to the schema or in a separate resolver map
-- Use `express-graphql` or `apollo-server` to serve over HTTP
-
-**gqlgen (Go)**:
-
-- Schema-first: write `schema.graphql`, run `go generate` to generate resolver stubs
-- Implement the `Resolver` interface in `resolver.go`
-- The `hello` field maps to a `Hello()` method on your resolver
-
-**Hot Chocolate (.NET)**:
-
-- Code-first: define a `Query` class with a `GetHello()` method
-- Schema-first: write SDL and implement resolvers separately
-- Use `AddGraphQLServer()` in your ASP.NET Core startup
-
-**Strawberry (Python)**:
-
-- Code-first: define a `@strawberry.type` class with a `hello` field
-- Schema-first: use `strawberry.Schema.from_type_defs()` with SDL
-- Resolvers are methods on your type classes or standalone functions
-
-**graphql-java (Java)**:
-
-- Use `SchemaGenerator` with SDL, or build schema programmatically with `GraphQLObjectType`
-- Resolvers are `DataFetcher` instances
-- Serve with Spring Boot GraphQL or `graphql-java-kickstart`
-
 ## Links to Official Documentation
 
 - [Introduction to GraphQL](https://graphql.org/learn/) — Start here for the "why"

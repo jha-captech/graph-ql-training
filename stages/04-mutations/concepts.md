@@ -40,43 +40,6 @@ After completing this stage, you should be able to answer:
 
 1. **If a mutation fails halfway through (e.g., database error), what should the response look like?** (Return an error in the `errors` array; optionally roll back the transaction)
 
-## Implementation Notes by Framework
-
-**graphql-js (TypeScript/JavaScript)**:
-
-- Input types: `input CreateProductInput { title: String! }` in SDL, or `GraphQLInputObjectType` in code
-- Mutations are resolvers in the `Mutation` type: `Mutation: { createProduct: (parent, args, context) => { ... } }`
-- Access input fields via `args.input.title`, `args.input.price`, etc.
-- For transactions: use your DB library's transaction API (e.g., `db.transaction(async (tx) => { ... })`)
-
-**gqlgen (Go)**:
-
-- Input types in SDL generate Go structs
-- Mutation resolvers: `func (r *mutationResolver) CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error)`
-- Access fields via `input.Title`, `input.Price`, etc.
-- For transactions: `tx, _ := r.DB.BeginTx(ctx, nil); defer tx.Rollback(); ... tx.Commit()`
-
-**Hot Chocolate (.NET)**:
-
-- Input types are C# classes with `[GraphQLInputType]` or inferred from method parameters
-- Mutation resolvers are methods on a `Mutation` class
-- Example: `public async Task<CreateProductPayload> CreateProduct(CreateProductInput input, [Service] IDbContext db)`
-- For transactions: `using var tx = await db.Database.BeginTransactionAsync(); ... await tx.CommitAsync();`
-
-**Strawberry (Python)**:
-
-- Input types: `@strawberry.input` decorator on a dataclass
-- Mutations are methods on a `Mutation` type or standalone functions
-- Example: `@strawberry.mutation def create_product(input: CreateProductInput, info: strawberry.types.Info) -> CreateProductPayload:`
-- For transactions: use your ORM/DB library's transaction context manager
-
-**graphql-java (Java)**:
-
-- Input types: `GraphQLInputObjectType` or generated from schema
-- Mutation resolvers: `DataFetcher<CreateProductPayload>` implementations
-- Access input: `Map<String, Object> input = env.getArgument("input"); String title = (String) input.get("title");`
-- For transactions: use JDBC `Connection.setAutoCommit(false)` or JPA `@Transactional`
-
 ## Links to Official Documentation
 
 - [Mutations](https://graphql.org/learn/queries/#mutations) — How mutations work from the client side

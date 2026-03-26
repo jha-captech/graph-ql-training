@@ -37,86 +37,21 @@ GraphQL's flexible nature makes auth more nuanced than REST. A single query can 
 
 ### The Context Object Pattern
 
-GraphQL's `context` is a per-request object available to all resolvers. It's the perfect place for auth state:
+GraphQL's `context` is a per-request object available to all resolvers. It's the perfect place for auth state. Your authentication middleware should:
 
-```typescript
-type Context = {
-  user: User | null; // Authenticated user, or null
-  db: Database; // Database connection
-  dataloaders: DataLoaders; // DataLoader instances
-};
-```
+1. Extract the token from the HTTP request
+1. Verify and decode it
+1. Populate `context.user` with the authenticated user (or `null` if unauthenticated)
 
-Your authentication middleware populates `context.user`:
-
-```typescript
-app.use("/graphql", async (req, res, next) => {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  const user = token ? await verifyToken(token) : null;
-  req.context = { user, db, dataloaders };
-  next();
-});
-```
-
-Resolvers then check `context.user`:
-
-```typescript
-const Query = {
-  me: (parent, args, context) => {
-    return context.user; // null if not authenticated
-  },
-
-  users: (parent, args, context) => {
-    if (!context.user || context.user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-    return context.db.users.findAll();
-  },
-};
-```
+Resolvers then check `context.user` to determine what the caller is allowed to do.
 
 ### Three Authorization Patterns
 
-**1. Query/Mutation-Level**: Entire operation requires auth
+**1. Query/Mutation-Level**: Entire operation requires auth. For example, "only admins can list all users."
 
-```typescript
-// "Only admins can list all users"
-users: (parent, args, context) => {
-  requireRole(context.user, "ADMIN");
-  return db.users.findAll();
-};
-```
+**2. Entity-Level**: Filter results based on ownership. For example, "users see their own orders, admins see all orders."
 
-**2. Entity-Level**: Filter results based on ownership
-
-```typescript
-// "Users see their own orders, admins see all orders"
-orders: (parent, args, context) => {
-  if (!context.user) throw new Error("Unauthenticated");
-
-  if (context.user.role === "ADMIN") {
-    return db.orders.findAll();
-  }
-  return db.orders.findByBuyerId(context.user.id);
-};
-```
-
-**3. Field-Level**: Specific fields have access rules
-
-```typescript
-// User.email is only visible to self and admins
-User: {
-  email: (user, args, context) => {
-    const isSelf = context.user?.id === user.id;
-    const isAdmin = context.user?.role === "ADMIN";
-
-    if (!isSelf && !isAdmin) {
-      return null; // or throw an error
-    }
-    return user.email;
-  };
-}
-```
+**3. Field-Level**: Specific fields have access rules. For example, "User.email is only visible to self and admins."
 
 ## Key Concepts
 
@@ -144,16 +79,7 @@ Our domain has three roles:
 - **SELLER**: Can create/update their own products, see orders for their products
 - **ADMIN**: Can do everything
 
-Roles are stored in the database (`users.role`) and checked in business logic:
-
-```typescript
-function requireRole(user: User | null, allowedRoles: Role[]): void {
-  if (!user) throw new Error("Authentication required");
-  if (!allowedRoles.includes(user.role)) {
-    throw new Error("Insufficient permissions");
-  }
-}
-```
+Roles are stored in the database (`users.role`) and checked in business logic. A typical `requireRole` helper validates that the user is authenticated and has one of the allowed roles, throwing an error otherwise.
 
 ### Token-Based Auth (JWT)
 
@@ -214,18 +140,7 @@ type User {
 }
 ```
 
-Implement this in the field resolver:
-
-```typescript
-User: {
-  email: (user, args, context) => {
-    if (canViewEmail(context.user, user)) {
-      return user.email;
-    }
-    return null; // Hide the email
-  };
-}
-```
+Implement this in the field resolver by checking if the requesting user has permission to see the field, and returning `null` or throwing an error if not.
 
 **Trade-off**: Returning `null` vs. throwing an error. Both are valid:
 
@@ -249,133 +164,6 @@ Choose based on your API's semantics. If the field is `String!` (non-null), you 
 1. **How do you implement field-level auth efficiently?** Do you check permissions in every field resolver?
 
 1. **What's the difference between authentication errors and authorization errors?** Should they have different error codes?
-
-## Implementation Notes by Framework
-
-### graphql-js (TypeScript/JavaScript)
-
-Set up context in your server:
-
-```typescript
-const server = new ApolloServer({
-  schema,
-  context: async ({ req }) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const user = token ? await verifyToken(token) : null;
-    return { user, db, dataloaders };
-  },
-});
-```
-
-Check auth in resolvers:
-
-```typescript
-const Query = {
-  me: (parent, args, context) => context.user,
-
-  users: (parent, args, context) => {
-    if (context.user?.role !== "ADMIN") {
-      throw new GraphQLError("Unauthorized", {
-        extensions: { code: "FORBIDDEN" },
-      });
-    }
-    return db.users.findAll();
-  },
-};
-```
-
-### gqlgen (Go)
-
-Define a context struct:
-
-```go
-type Context struct {
-    User *User
-    DB   *Database
-}
-```
-
-Populate it in middleware:
-
-```go
-func AuthMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        user := extractUser(r.Header.Get("Authorization"))
-        ctx := context.WithValue(r.Context(), "auth", &Context{User: user})
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
-```
-
-Access in resolvers:
-
-```go
-func (r *queryResolver) Me(ctx context.Context) (*User, error) {
-    authCtx := ctx.Value("auth").(*Context)
-    return authCtx.User, nil
-}
-```
-
-### Strawberry (Python)
-
-Use dependency injection for context:
-
-```python
-@strawberry.type
-class Query:
-    @strawberry.field
-    def me(self, info: strawberry.Info) -> Optional[User]:
-        return info.context.user
-
-    @strawberry.field
-    def users(self, info: strawberry.Info) -> List[User]:
-        if not info.context.user or info.context.user.role != Role.ADMIN:
-            raise PermissionError("Unauthorized")
-        return get_all_users(info.context.db)
-```
-
-### Hot Chocolate (.NET)
-
-Use `[Authorize]` attributes or custom auth directives:
-
-```csharp
-public class Query {
-    public User? Me([Service] IHttpContextAccessor accessor) {
-        return accessor.HttpContext?.User?.Identity?.IsAuthenticated == true
-            ? GetCurrentUser(accessor)
-            : null;
-    }
-
-    [Authorize(Roles = "ADMIN")]
-    public List<User> GetUsers([Service] IUserRepository repo) {
-        return repo.GetAll();
-    }
-}
-```
-
-### graphql-java (Java/Kotlin)
-
-Populate context in `DataFetchingEnvironment`:
-
-```java
-GraphQL graphQL = GraphQL.newGraphQL(schema)
-    .defaultDataFetcherExceptionHandler(...)
-    .build();
-
-ExecutionInput input = ExecutionInput.newExecutionInput()
-    .context(new Context(user, db))
-    .query(query)
-    .build();
-```
-
-Access in data fetchers:
-
-```java
-DataFetcher<User> meDataFetcher = environment -> {
-    Context ctx = environment.getContext();
-    return ctx.getUser();
-};
-```
 
 ## Official Documentation
 
