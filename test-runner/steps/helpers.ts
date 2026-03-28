@@ -72,6 +72,7 @@ export async function sendGraphQLRequest(
 /**
  * Resolve a dot-notation path on an object.
  * Supports array indexing: "data.products[0].title"
+ * Supports array wildcards: "data.products[*].categories[*].name"
  * Supports JSONPath filter: "data.__type.fields[?(@.name=='title')].type.name"
  */
 export function resolvePath(obj: unknown, path: string): unknown {
@@ -95,48 +96,99 @@ export function resolvePath(obj: unknown, path: string): unknown {
   }
   if (current) tokens.push(current);
 
-  let value: unknown = obj;
-  for (const token of tokens) {
-    if (value === null || value === undefined) return undefined;
+  let values: unknown[] = [obj];
+  let usedWildcard = false;
 
-    // Handle array index: [0], [1], etc.
-    const indexMatch = token.match(/^(\d+)$/);
-    if (indexMatch) {
-      if (Array.isArray(value)) {
-        value = value[parseInt(indexMatch[1])];
+  for (const token of tokens) {
+    const nextValues: unknown[] = [];
+    let expanded = false;
+
+    for (const value of values) {
+      if (value === null || value === undefined) {
+        if (!usedWildcard) {
+          return undefined;
+        }
         continue;
       }
-    }
 
-    // Handle combined key[index]: "items[0]"
-    const keyIndexMatch = token.match(/^(\w+)\[(\d+)\]$/);
-    if (keyIndexMatch) {
-      value = (value as Record<string, unknown>)[keyIndexMatch[1]];
-      if (Array.isArray(value)) {
-        value = value[parseInt(keyIndexMatch[2])];
-      } else {
+      // Handle array index: [0], [1], etc.
+      const indexMatch = token.match(/^(\d+)$/);
+      if (indexMatch) {
+        if (Array.isArray(value)) {
+          nextValues.push(value[parseInt(indexMatch[1])]);
+          continue;
+        }
+        if (!usedWildcard) {
+          return undefined;
+        }
+        continue;
+      }
+
+      // Handle combined key[index]: "items[0]"
+      const keyIndexMatch = token.match(/^(\w+)\[(\d+)\]$/);
+      if (keyIndexMatch) {
+        const nested = (value as Record<string, unknown>)[keyIndexMatch[1]];
+        if (Array.isArray(nested)) {
+          nextValues.push(nested[parseInt(keyIndexMatch[2])]);
+          continue;
+        }
+        if (!usedWildcard) {
+          return undefined;
+        }
+        continue;
+      }
+
+      // Handle combined key[*]: "items[*]"
+      const keyWildcardMatch = token.match(/^(\w+)\[\*\]$/);
+      if (keyWildcardMatch) {
+        const nested = (value as Record<string, unknown>)[keyWildcardMatch[1]];
+        if (Array.isArray(nested)) {
+          nextValues.push(...nested);
+          expanded = true;
+          continue;
+        }
+        if (!usedWildcard) {
+          return undefined;
+        }
+        continue;
+      }
+
+      // Handle JSONPath filter: [?(@.name=='value')]
+      const filterMatch = token.match(/^\[\?\(@\.(\w+)==['"](.*)['"]\)\]$/);
+      if (filterMatch) {
+        if (Array.isArray(value)) {
+          const [, filterKey, filterValue] = filterMatch;
+          nextValues.push(
+            value.find(
+              (item: Record<string, unknown>) => item[filterKey] === filterValue,
+            ),
+          );
+          continue;
+        }
+        if (!usedWildcard) {
+          return undefined;
+        }
+        continue;
+      }
+
+      // Regular property access
+      if (typeof value === "object" && value !== null) {
+        nextValues.push((value as Record<string, unknown>)[token]);
+        continue;
+      }
+
+      if (!usedWildcard) {
         return undefined;
       }
-      continue;
     }
 
-    // Handle JSONPath filter: [?(@.name=='value')]
-    const filterMatch = token.match(/^\[\?\(@\.(\w+)==['"](.*)['"]\)\]$/);
-    if (filterMatch) {
-      if (!Array.isArray(value)) return undefined;
-      const [, filterKey, filterValue] = filterMatch;
-      value = value.find(
-        (item: Record<string, unknown>) => item[filterKey] === filterValue,
-      );
-      continue;
-    }
-
-    // Regular property access
-    if (typeof value === "object" && value !== null) {
-      value = (value as Record<string, unknown>)[token];
-    } else {
-      return undefined;
-    }
+    values = nextValues;
+    usedWildcard = usedWildcard || expanded;
   }
-  return value;
+
+  if (usedWildcard) {
+    return values;
+  }
+
+  return values[0];
 }
