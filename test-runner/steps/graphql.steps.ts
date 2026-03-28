@@ -9,7 +9,7 @@ import { generateToken, sendGraphQLRequest, resolvePath } from "./helpers";
 Given(
   "the GraphQL endpoint is {string}",
   function (this: GraphQLWorld, url: string) {
-    this.endpoint = url;
+    this.endpoint = process.env.GRAPHQL_ENDPOINT || url;
   },
 );
 
@@ -101,9 +101,13 @@ When(
 
 When(
   "I set the variable {string} to:",
-  function (this: GraphQLWorld, name: string, table: { rawTable: string[][] }) {
+  function (
+    this: GraphQLWorld,
+    name: string,
+    table: { rows: () => string[][] },
+  ) {
     const obj: Record<string, unknown> = {};
-    for (const [key, value] of table.rawTable) {
+    for (const [key, value] of table.rows()) {
       try {
         obj[key] = JSON.parse(value);
       } catch {
@@ -111,6 +115,15 @@ When(
       }
     }
     this.variables[name] = obj;
+  },
+);
+
+When(
+  "I save {string} as variable {string}",
+  function (this: GraphQLWorld, path: string, varName: string) {
+    assert.ok(this.lastResponse, "No response received");
+    const value = resolvePath(this.lastResponse.body, path);
+    this.variables[varName] = value;
   },
 );
 
@@ -520,10 +533,25 @@ Then(
   function (this: GraphQLWorld, path: string, substring: string) {
     assert.ok(this.lastResponse, "No response received");
     const value = resolvePath(this.lastResponse.body, path);
-    assert.ok(typeof value === "string", `Expected "${path}" to be a string`);
-    assert.ok(
-      value.includes(substring),
-      `Expected "${value}" to contain "${substring}"`,
+
+    if (typeof value === "string") {
+      assert.ok(
+        value.includes(substring),
+        `Expected "${value}" to contain "${substring}"`,
+      );
+      return;
+    }
+
+    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+      assert.ok(
+        substring in value,
+        `Expected "${path}" to contain field "${substring}"`,
+      );
+      return;
+    }
+
+    assert.fail(
+      `Expected "${path}" to be a string or object, got ${Array.isArray(value) ? "array" : typeof value}`,
     );
   },
 );

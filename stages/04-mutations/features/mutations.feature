@@ -286,7 +286,7 @@ Feature: Mutation Operations
       """
     Then the response status should be 200
     Then the response should not contain "errors"
-    When I save "data.createProduct.product.id" as "createdProductId"
+    When I save "data.createProduct.product.id" as variable "id"
     When I send a GraphQL query:
       """
       query GetCreatedProduct($id: ID!) {
@@ -298,7 +298,7 @@ Feature: Mutation Operations
       }
       """
     Then the response status should be 200
-    Then the response "data.product.id" should equal saved "createdProductId"
+    Then the response "data.product.id" should equal saved "id"
     Then the response "data.product.title" should equal "Queryable Product"
 
   Scenario: Multiple mutations execute serially

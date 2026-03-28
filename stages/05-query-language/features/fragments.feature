@@ -51,7 +51,8 @@ Feature: GraphQL Fragments
     Then the response should not contain "errors"
     Then the response "data.first.id" should equal "prod-001"
     Then the response "data.second.id" should equal "prod-002"
-    Then each item in "data" should have fields "first, second"
+    Then the response should contain "data.first"
+    Then the response should contain "data.second"
 
   Scenario: Nested fragments
     When I send a GraphQL query:
