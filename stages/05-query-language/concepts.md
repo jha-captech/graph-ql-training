@@ -54,6 +54,14 @@ You're not adding new resolvers or schema types. Instead, you're verifying that 
 
 This stage tests the _execution engine_, not your domain logic.
 
+> **Note:** The test for missing required variables (`variables.feature:68`) expects the error message to contain the word `"Variable"`, matching the reference graphql-js format (`Variable "$productId" of required type "ID!" was not provided.`). Some frameworks use different wording — for example, gqlgen (Go) returns `"must be defined"` by default. If your server's default message doesn't match, you have a few options:
+>
+> - **Customize the error presenter** to rewrite variable validation errors to include `"Variable"` in the message
+> - **Update the test assertion** to check for a substring your framework does return (e.g., `"must be defined"`, `"not provided"`, `"non-null"`)
+> - **Check `errors[0].path`** instead of the message — most implementations include the variable name in the error path (e.g., `["variable", "productId"]`)
+>
+> The GraphQL spec does not mandate specific error message wording.
+
 ## Run Tests
 
 From the repo root:
