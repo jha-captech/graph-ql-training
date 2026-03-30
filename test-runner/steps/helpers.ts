@@ -70,6 +70,23 @@ export async function sendGraphQLRequest(
 }
 
 /**
+ * Interpolate ${path.to.value} expressions in a string against a response body.
+ * Used to carry forward values (e.g., cursors) from a previous response.
+ */
+export function interpolateVars(
+  template: string,
+  body: Record<string, unknown>,
+): string {
+  return template.replace(/\$\{([^}]+)\}/g, (_match, path: string) => {
+    const value = resolvePath(body, path);
+    if (value === undefined || value === null) {
+      return "";
+    }
+    return String(value);
+  });
+}
+
+/**
  * Resolve a dot-notation path on an object.
  * Supports array indexing: "data.products[0].title"
  * Supports array wildcards: "data.products[*].categories[*].name"
@@ -160,7 +177,8 @@ export function resolvePath(obj: unknown, path: string): unknown {
           const [, filterKey, filterValue] = filterMatch;
           nextValues.push(
             value.find(
-              (item: Record<string, unknown>) => item[filterKey] === filterValue,
+              (item: Record<string, unknown>) =>
+                item[filterKey] === filterValue,
             ),
           );
           continue;

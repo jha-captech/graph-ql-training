@@ -2,7 +2,12 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { strict as assert } from "assert";
 import WebSocket from "ws";
 import { GraphQLWorld } from "./world";
-import { generateToken, sendGraphQLRequest, resolvePath } from "./helpers";
+import {
+  generateToken,
+  sendGraphQLRequest,
+  resolvePath,
+  interpolateVars,
+} from "./helpers";
 
 // ─── Setup ───────────────────────────────────────────────────────────
 
@@ -132,9 +137,12 @@ When(
 When(
   "I send a GraphQL query:",
   async function (this: GraphQLWorld, query: string) {
+    const resolvedQuery = this.lastResponse
+      ? interpolateVars(query, this.lastResponse.body)
+      : query;
     this.lastResponse = await sendGraphQLRequest(
       this.endpoint,
-      query,
+      resolvedQuery,
       this.variables,
       this.authHeader,
     );
@@ -295,12 +303,14 @@ Then(
   function (this: GraphQLWorld, path: string, expected: string) {
     assert.ok(this.lastResponse, "No response received");
     const value = resolvePath(this.lastResponse.body, path);
+    // Resolve ${...} references against the current response
+    const resolved = interpolateVars(expected, this.lastResponse.body);
     // Try to parse expected as JSON for numbers, booleans, null
     let parsed: unknown;
     try {
-      parsed = JSON.parse(expected);
+      parsed = JSON.parse(resolved);
     } catch {
-      parsed = expected;
+      parsed = resolved;
     }
     assert.deepStrictEqual(value, parsed);
   },
