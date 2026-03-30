@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS orders (
     id TEXT PRIMARY KEY,
     buyer_id TEXT NOT NULL REFERENCES users(id),
@@ -8,3 +9,6 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_buyer_id ON orders(buyer_id);
+
+-- +goose Down
+DROP TABLE IF EXISTS orders;

@@ -18,47 +18,37 @@ Starting with a single `hello` field teaches you to think **schema-first**. In G
 
 **The Type System**: GraphQL is strongly typed. Every field has a declared type. The `!` modifier means non-null (required). This enables powerful tooling: IDEs can autocomplete queries, clients can generate type-safe code, and the server validates queries before execution.
 
+## Schema Files vs Operation Files
+
+There are two distinct types of `.graphql` files you'll encounter in GraphQL projects, and confusing them is a common early mistake:
+
+**Schema files** (`schema.graphql`) contain **type definitions** — they describe the shape of your API using SDL keywords like `type`, `input`, `enum`, `interface`, and `scalar`. Your server tooling loads these to know what queries are valid and what types exist.
+
+**Operation files** (`operations.graphql`) contain **client queries and mutations** — the actual requests a client sends to your API. They start with keywords like `query`, `mutation`, or `subscription`. These are for manual exploration in tools like GraphiQL or Postman, not for your server's schema configuration.
+
+```graphql
+# Schema definition (goes in schema.graphql — loaded by your server)
+type Query {
+  hello: String!
+}
+
+# Client operation (goes in operations.graphql — NOT loaded by your server)
+query HelloWorld {
+  hello
+}
+```
+
+**Why this matters**: Many GraphQL code generators and server frameworks let you specify schema sources with glob patterns like `*.graphql`. If your glob includes operation files, the server will try to parse `query HelloWorld {` as a type definition and fail with a confusing error like `Unexpected Name "query"`. Only point your server's schema configuration at actual schema files.
+
 ## Key Questions
 
 After completing this stage, you should be able to answer:
 
 1. **What is the difference between a GraphQL query and a REST request?** (Hint: think about what determines the response shape)
-2. **What happens when a client sends a query for a field that doesn't exist in the schema?** (Try it and observe the error)
-3. **Where is the schema defined, and how does the server know what fields are queryable?**
-4. **What is a resolver, and what does the `hello` field's resolver do?**
-5. **Why does GraphQL serve over HTTP POST instead of GET?** (Consider: queries can be large and contain variables)
-
-## Implementation Notes by Framework
-
-**graphql-js (TypeScript/JavaScript)**:
-
-- Schema is defined using `GraphQLSchema` and `GraphQLObjectType` (code-first), or `buildSchema()` from SDL (schema-first)
-- Resolvers are functions passed to the schema or in a separate resolver map
-- Use `express-graphql` or `apollo-server` to serve over HTTP
-
-**gqlgen (Go)**:
-
-- Schema-first: write `schema.graphql`, run `go generate` to generate resolver stubs
-- Implement the `Resolver` interface in `resolver.go`
-- The `hello` field maps to a `Hello()` method on your resolver
-
-**Hot Chocolate (.NET)**:
-
-- Code-first: define a `Query` class with a `GetHello()` method
-- Schema-first: write SDL and implement resolvers separately
-- Use `AddGraphQLServer()` in your ASP.NET Core startup
-
-**Strawberry (Python)**:
-
-- Code-first: define a `@strawberry.type` class with a `hello` field
-- Schema-first: use `strawberry.Schema.from_type_defs()` with SDL
-- Resolvers are methods on your type classes or standalone functions
-
-**graphql-java (Java)**:
-
-- Use `SchemaGenerator` with SDL, or build schema programmatically with `GraphQLObjectType`
-- Resolvers are `DataFetcher` instances
-- Serve with Spring Boot GraphQL or `graphql-java-kickstart`
+1. **What happens when a client sends a query for a field that doesn't exist in the schema?** (Try it and observe the error)
+1. **Where is the schema defined, and how does the server know what fields are queryable?**
+1. **What is a resolver, and what does the `hello` field's resolver do?**
+1. **Why does GraphQL serve over HTTP POST instead of GET?** (Consider: queries can be large and contain variables)
 
 ## Links to Official Documentation
 
@@ -68,13 +58,20 @@ After completing this stage, you should be able to answer:
 - [Serving GraphQL over HTTP](https://graphql.org/learn/serving-over-http/) — The transport layer spec
 - [Execution](https://graphql.org/learn/execution/) — How GraphQL resolves queries
 
-## What You're Building
+## Your Task
 
-A server that:
+1. Create a GraphQL server that listens at `http://localhost:4000/graphql`
+1. Define the schema from `schema.graphql` — a single `Query` type with one field: `hello: String!`
+1. Write a resolver for the `hello` field that returns exactly the string `"Hello, GraphQL!"`
+1. The server should accept POST requests and respond with JSON: `{ "data": { "hello": "Hello, GraphQL!" } }`
+1. Verify it works by running the test suite
 
-1. Listens on an HTTP endpoint (typically `http://localhost:4000/graphql`)
-2. Defines a schema with a single `Query` type containing a `hello` field
-3. Implements a resolver for `hello` that returns any string (e.g., `"Hello, GraphQL!"`)
-4. Responds to POST requests with JSON in the format `{ "data": { "hello": "..." } }`
+No database, no authentication, no complex types — just the foundational machinery. Once you have this working, you understand the core loop: schema → resolver → response.
 
-No database, no authentication, no complex types—just the foundational machinery. Once you have this working, you understand the core loop: schema → resolver → response.
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=01 bun run --cwd test-runner test:stage
+```

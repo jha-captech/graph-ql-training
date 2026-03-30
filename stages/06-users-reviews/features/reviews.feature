@@ -1,4 +1,4 @@
-@stage:06
+@stage:06 @db:reset
 Feature: Review Queries and Relationships
 
   Background:

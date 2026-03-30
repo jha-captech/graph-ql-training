@@ -6,13 +6,13 @@ A progressive, language-agnostic GraphQL curriculum. You receive schemas, Gherki
 
 Install these tools before starting:
 
-| Tool                                                        | Purpose             | Install                        |
-| ----------------------------------------------------------- | ------------------- | ------------------------------ |
-| [Bun](https://bun.sh/) 1.0+                                 | Test runner         | `brew install oven-sh/bun/bun` |
-| [SQLite](https://sqlite.org/) 3.35+                         | Database            | `brew install sqlite3`         |
-| [golang-migrate](https://github.com/golang-migrate/migrate) | Database migrations | `brew install golang-migrate`  |
-| [go-task](https://taskfile.dev/)                            | Task runner         | `brew install go-task`         |
-| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+)         | External API mocks  | `bun install -g @mockoon/cli`  |
+| Tool                                                | Purpose             | Install                        |
+| --------------------------------------------------- | ------------------- | ------------------------------ |
+| [Bun](https://bun.sh/) 1.0+                         | Test runner         | `brew install oven-sh/bun/bun` |
+| [SQLite](https://sqlite.org/) 3.35+                 | Database            | `brew install sqlite3`         |
+| [goose](https://github.com/pressly/goose)           | Database migrations | `brew install goose`           |
+| [go-task](https://taskfile.dev/)                    | Task runner         | `brew install go-task`         |
+| [Mockoon CLI](https://mockoon.com/cli/) (stage 14+) | External API mocks  | `bun install -g @mockoon/cli`  |
 
 ## Quick Start
 
@@ -98,6 +98,8 @@ git add -A && git commit -m "stage XX complete"
 
 Each stage builds on the previous one. Schemas are cumulative — stage 06's schema includes everything from stages 01-05 plus new additions. Each stage provides a `concepts.md` with the "why", a `schema.graphql` with the target SDL, `features/*.feature` with test specs, and `operations.graphql` with sample queries for manual exploration.
 
+> **Important**: Only `schema.graphql` should be loaded by your server's schema configuration. The `operations.graphql` files contain client-side queries for manual testing — they are **not** schema definitions. Including them in your schema input (e.g., via a `*.graphql` glob) will cause parse errors.
+
 ## Your Server Code
 
 Put your implementation in a `server/` directory at the project root:
@@ -131,24 +133,24 @@ Your server should read from these variables rather than hardcoding values. The 
 
 ## Stage Overview
 
-| Stage | Topic                      | Database        | Seed Tier |
-| ----- | -------------------------- | --------------- | --------- |
-| 01    | Hello GraphQL              | None            | None      |
-| 02    | Types & Enums              | Migrations 1-3  | `base`    |
-| 03    | Relationships              | Migrations 1-3  | `base`    |
-| 04    | Mutations                  | Migrations 1-3  | `base`    |
-| 05    | Query Language             | Migrations 1-3  | `base`    |
-| 06    | Users & Reviews            | Migrations 1-5  | `full`    |
-| 07    | Interfaces & Unions        | Migrations 1-5  | `full`    |
-| 08    | DataLoader                 | Migrations 1-5  | `full`    |
-| 09    | Pagination                 | Migrations 1-6  | `full`    |
-| 10    | Error Handling             | Migrations 1-6  | `full`    |
-| 11    | Authentication             | Migrations 1-6  | `full`    |
-| 12    | Orders                     | Migrations 1-10 | `orders`  |
-| 13    | Subscriptions              | Migrations 1-10 | `orders`  |
-| 14    | Remote Data Sources        | Migrations 1-10 | `orders`  |
-| 15    | Custom Scalars & Evolution | Migrations 1-11 | `orders`  |
-| 16    | Security & Federation      | Migrations 1-11 | `orders`  |
+| Stage | Topic                                                      | Database        | Seed Tier |
+| ----- | ---------------------------------------------------------- | --------------- | --------- |
+| 01    | [Hello GraphQL](stages/01-hello-graphql/)                  | None            | None      |
+| 02    | [Types & Enums](stages/02-types-and-enums/)                | Migrations 1-3  | `base`    |
+| 03    | [Relationships](stages/03-relationships/)                  | Migrations 1-3  | `base`    |
+| 04    | [Mutations](stages/04-mutations/)                          | Migrations 1-3  | `base`    |
+| 05    | [Query Language](stages/05-query-language/)                | Migrations 1-3  | `base`    |
+| 06    | [Users & Reviews](stages/06-users-reviews/)                | Migrations 1-5  | `full`    |
+| 07    | [Interfaces & Unions](stages/07-interfaces-unions/)        | Migrations 1-5  | `full`    |
+| 08    | [DataLoader](stages/08-dataloader/)                        | Migrations 1-5  | `full`    |
+| 09    | [Pagination](stages/09-pagination/)                        | Migrations 1-6  | `full`    |
+| 10    | [Error Handling](stages/10-error-handling/)                | Migrations 1-6  | `full`    |
+| 11    | [Authentication](stages/11-auth/)                          | Migrations 1-6  | `full`    |
+| 12    | [Orders](stages/12-orders/)                                | Migrations 1-10 | `orders`  |
+| 13    | [Subscriptions](stages/13-subscriptions/)                  | Migrations 1-10 | `orders`  |
+| 14    | [Remote Data Sources](stages/14-remote-data/)              | Migrations 1-10 | `orders`  |
+| 15    | [Custom Scalars & Evolution](stages/15-scalars-evolution/) | Migrations 1-11 | `orders`  |
+| 16    | [Security & Federation](stages/16-security-federation/)    | Migrations 1-11 | `orders`  |
 
 ## Task Commands
 
@@ -162,9 +164,10 @@ task env:reset             # Reset .env to defaults
 # Database
 task db:reset STAGE=06     # Reset DB for a specific stage (drops + migrates + seeds)
 task migrate:up            # Run all pending migrations
-task migrate:down N=1      # Roll back N migrations
-task migrate:goto V=5      # Migrate to specific version
+task migrate:down          # Roll back one migration
+task migrate:up-to V=5     # Migrate up to specific version
 task migrate:version       # Print current version
+task migrate:status        # Show status of all migrations
 
 # Mock APIs (stage 14+)
 task mocks:start           # Start shipping, tax, currency mocks
@@ -223,15 +226,15 @@ Your server should validate JWT tokens from the `Authorization: Bearer <token>` 
 
 ### Why E-Commerce
 
-After evaluating todo apps, blogs, social media, and library systems, a simplified marketplace wins because it naturally covers every GraphQL concept without contrived examples: object types (Products, Users, Orders), relationships of all cardinalities (User->Orders->LineItems, Products<->Categories), interfaces (`Node`, `Timestamped`), unions (`SearchResult`), enums (`OrderStatus`, `Role`), pagination (product catalog), auth (role-based access), subscriptions (order status changes), DataLoader (reviews for a list of products), and federation (subgraph splits).
+After evaluating todo apps, blogs, social media, and library systems, a simplified marketplace wins because it naturally covers every GraphQL concept without contrived examples: object types (Products, Users, Orders), relationships of all cardinalities (User->Orders->LineItems, Products\<->Categories), interfaces (`Node`, `Timestamped`), unions (`SearchResult`), enums (`OrderStatus`, `Role`), pagination (product catalog), auth (role-based access), subscriptions (order status changes), DataLoader (reviews for a list of products), and federation (subgraph splits).
 
 ### Why SQLite
 
 SQLite is a file — zero infrastructure, no Docker, no connection strings, no server process. Every language has bindings. Students focus on GraphQL from day one, not database setup.
 
-### Why golang-migrate
+### Why goose
 
-Language-agnostic standalone binary — no runtime dependency on Go, Node, or Java. Plain SQL up/down files with no DSL or ORM coupling. The `goto V` command maps perfectly to our staged curriculum. Alternatives like Flyway (Java dependency), dbmate (no `goto`), or Atlas (declarative complexity we don't need) were considered.
+Language-agnostic standalone binary — no runtime dependency on Go, Node, or Java. Single-file SQL migrations with `-- +goose Up` / `-- +goose Down` annotations keep up and down logic together. The `up-to V` command maps to our staged curriculum. Sequential numbering avoids timestamp merge conflicts in a training repo.
 
 ### Why Mockoon for External API Mocks
 

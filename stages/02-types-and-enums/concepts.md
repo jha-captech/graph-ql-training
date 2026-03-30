@@ -25,50 +25,13 @@ SQLite from day one teaches you the real-world pattern: GraphQL resolvers fetch 
 After completing this stage, you should be able to answer:
 
 1. **What are the five built-in scalar types in GraphQL?** (ID, String, Int, Float, Boolean)
-2. **What's the difference between `String` and `String!`?** What happens if a resolver returns null for each?
-3. **Why is `description` nullable but `title` non-null?** (Hint: think about what's essential vs. optional)
-4. **What's the difference between the `ID` and `String` scalars?** (They serialize the same way, but ID has semantic meaning)
-5. **What are the four arguments every resolver receives?** (parent/root, args, context, info)
-6. **Where should the database connection live?** (In the context object, not global state)
-7. **What happens when a client queries `product(id: "nonexistent")`?** (Should return null, not an error)
-8. **What's the difference between returning `null` and throwing an error in a resolver?**
-
-## Implementation Notes by Framework
-
-**graphql-js (TypeScript/JavaScript)**:
-
-- Enums are defined with `GraphQLEnumType` or in SDL with `enum ProductStatus { ... }`
-- Resolvers receive `(parent, args, context, info)` as arguments
-- Put your database connection in context: `context: { db: sqliteConnection }`
-- Non-null is `new GraphQLNonNull(GraphQLString)` or `String!` in SDL
-
-**gqlgen (Go)**:
-
-- Enums in SDL generate Go `const` declarations
-- Resolvers are methods on your resolver struct
-- Store DB in resolver struct: `type Resolver struct { DB *sql.DB }`
-- Use `sql.NullString` for nullable fields like `description`
-
-**Hot Chocolate (.NET)**:
-
-- Enums are C# enums with `[GraphQLType]` attribute
-- Resolvers are methods on your query class or separate resolver classes
-- Inject dependencies (like DB context) via constructor or `[Service]` parameters
-- Nullable fields: use `string?` in C# 8+
-
-**Strawberry (Python)**:
-
-- Enums are `strawberry.enum` wrapping Python `Enum` classes
-- Resolvers are methods on your type class or standalone functions with `@strawberry.field`
-- Pass DB connection via `strawberry.types.Info.context`
-- Nullable fields: use `Optional[str]` type hints
-
-**graphql-java (Java)**:
-
-- Enums: `GraphQLEnumType.newEnum().name("ProductStatus").value("DRAFT")...build()`
-- Resolvers are `DataFetcher<Product>` implementations
-- Store DB connection in `DataFetchingEnvironment.getContext()`
-- Nullable fields: use nullable types or Optional<String>
+1. **What's the difference between `String` and `String!`?** What happens if a resolver returns null for each?
+1. **Why is `description` nullable but `title` non-null?** (Hint: think about what's essential vs. optional)
+1. **What's the difference between the `ID` and `String` scalars?** (They serialize the same way, but ID has semantic meaning)
+1. **What are the four arguments every resolver receives?** (parent/root, args, context, info)
+1. **Where should the database connection live?** (In the context object, not global state)
+1. **What happens when a client queries `product(id: "nonexistent")`?** (Should return null, not an error)
+1. **What's the difference between returning `null` and throwing an error in a resolver?**
 
 ## Links to Official Documentation
 
@@ -82,30 +45,7 @@ After completing this stage, you should be able to answer:
 
 Your server needs to connect to a SQLite database file. The file path is set by the `DB_FILE` environment variable (default: `graphql_training.db` in the project root). Run `task db:reset STAGE=02` to create and seed it.
 
-Pass the database connection through GraphQL's **context object** so all resolvers can access it:
-
-```typescript
-// TypeScript/JavaScript example
-import Database from "better-sqlite3";
-const db = new Database(process.env.DB_FILE || "graphql_training.db");
-
-// Pass db via context to all resolvers
-const server = new ApolloServer({
-  schema,
-  context: () => ({ db }),
-});
-```
-
-```go
-// Go example
-db, _ := sql.Open("sqlite3", os.Getenv("DB_FILE"))
-```
-
-```python
-# Python example
-import sqlite3
-db = sqlite3.connect(os.environ.get("DB_FILE", "graphql_training.db"))
-```
+Pass the database connection through GraphQL's **context object** so all resolvers can access it.
 
 **Important**: Prices in the database are stored as **integers in cents** (e.g., `12999` = $129.99). The schema defines `price: Float!`, so your resolver returns the raw integer value. Don't convert to dollars — the test suite expects cent values.
 
@@ -114,12 +54,20 @@ db = sqlite3.connect(os.environ.get("DB_FILE", "graphql_training.db"))
 A server that:
 
 1. Connects to a SQLite database (created and seeded via `task db:reset STAGE=02`)
-2. Reads the database path from the `DB_FILE` environment variable
-3. Defines a `Product` type with fields: `id`, `title`, `description`, `price`, `inStock`, `status`
-4. Defines a `ProductStatus` enum with values: `DRAFT`, `ACTIVE`, `ARCHIVED`
-5. Implements resolvers for:
+1. Reads the database path from the `DB_FILE` environment variable
+1. Defines a `Product` type with fields: `id`, `title`, `description`, `price`, `inStock`, `status`
+1. Defines a `ProductStatus` enum with values: `DRAFT`, `ACTIVE`, `ARCHIVED`
+1. Implements resolvers for:
    - `Query.products: [Product!]!` — returns all products from the database
    - `Query.product(id: ID!): Product` — returns a single product by ID, or null if not found
-6. Handles nullable fields correctly (e.g., `description` can be null, but `title` cannot)
+1. Handles nullable fields correctly (e.g., `description` can be null, but `title` cannot)
 
 The database is already set up with migrations and seed data. Your job is to read from it and expose it through GraphQL. This is the pattern you'll use for every stage: database → resolver → GraphQL response.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=02 bun run --cwd test-runner test:stage
+```

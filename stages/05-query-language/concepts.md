@@ -34,28 +34,6 @@ While the server schema remains unchanged from Stage 04, your resolver implement
 - **How do `@include` and `@skip` differ?** Can you use both on the same field?
 - **Do directives affect the schema, or only the query execution?** Can you define custom directives?
 
-## Implementation Notes
-
-### graphql-js (JavaScript/TypeScript)
-
-Variables are passed as the second argument to `execute()` or `graphql()`. Aliases and fragments are handled automatically by the execution engine—no resolver changes needed. Directives `@include` and `@skip` are built-in; custom directives require registering them in the schema and implementing resolution logic.
-
-### gqlgen (Go)
-
-Variables map to resolver argument structs. Fragments and aliases are handled by the generated code. `@include`/`@skip` work out of the box. For custom directives, use the `directive` configuration in `gqlgen.yml` to point to Go functions.
-
-### Hot Chocolate (.NET)
-
-Variables are automatically bound to resolver parameters. Fragments and aliases require no special handling. Built-in directives work automatically. Custom directives are classes implementing `DirectiveType` and registered in the schema builder.
-
-### Strawberry (Python)
-
-Variables are passed to the `execute` function. Aliases and fragments are handled by the execution layer. Directives `@include`/`@skip` are built-in. Custom directives use the `@strawberry.directive` decorator.
-
-### graphql-java (Java)
-
-Variables are provided via `ExecutionInput.Builder.variables()`. Fragments and aliases are part of the query parsing and execution—no resolver changes needed. Built-in directives work automatically; custom directives implement `SchemaDirectiveWiring`.
-
 ## Official GraphQL Documentation
 
 - [Queries and Mutations - Variables](https://graphql.org/learn/queries/#variables)
@@ -70,8 +48,24 @@ Variables are provided via `ExecutionInput.Builder.variables()`. Fragments and a
 You're not adding new resolvers or schema types. Instead, you're verifying that your GraphQL server correctly implements the query language specification. Your test suite will send queries with variables, aliases, fragments, and directives, and verify that the server:
 
 1. Validates variable types before execution
-2. Returns correctly aliased fields in the response
-3. Resolves both named and inline fragments
-4. Conditionally includes/excludes fields based on directives
+1. Returns correctly aliased fields in the response
+1. Resolves both named and inline fragments
+1. Conditionally includes/excludes fields based on directives
 
 This stage tests the _execution engine_, not your domain logic.
+
+> **Note:** The test for missing required variables (`variables.feature:68`) expects the error message to contain the word `"Variable"`, matching the reference graphql-js format (`Variable "$productId" of required type "ID!" was not provided.`). Some frameworks use different wording — for example, gqlgen (Go) returns `"must be defined"` by default. If your server's default message doesn't match, you have a few options:
+>
+> - **Customize the error presenter** to rewrite variable validation errors to include `"Variable"` in the message
+> - **Update the test assertion** to check for a substring your framework does return (e.g., `"must be defined"`, `"not provided"`, `"non-null"`)
+> - **Check `errors[0].path`** instead of the message — most implementations include the variable name in the error path (e.g., `["variable", "productId"]`)
+>
+> The GraphQL spec does not mandate specific error message wording.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=05 bun run --cwd test-runner test:stage
+```

@@ -37,86 +37,21 @@ GraphQL's flexible nature makes auth more nuanced than REST. A single query can 
 
 ### The Context Object Pattern
 
-GraphQL's `context` is a per-request object available to all resolvers. It's the perfect place for auth state:
+GraphQL's `context` is a per-request object available to all resolvers. It's the perfect place for auth state. Your authentication middleware should:
 
-```typescript
-type Context = {
-  user: User | null; // Authenticated user, or null
-  db: Database; // Database connection
-  dataloaders: DataLoaders; // DataLoader instances
-};
-```
+1. Extract the token from the HTTP request
+1. Verify and decode it
+1. Populate `context.user` with the authenticated user (or `null` if unauthenticated)
 
-Your authentication middleware populates `context.user`:
-
-```typescript
-app.use("/graphql", async (req, res, next) => {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  const user = token ? await verifyToken(token) : null;
-  req.context = { user, db, dataloaders };
-  next();
-});
-```
-
-Resolvers then check `context.user`:
-
-```typescript
-const Query = {
-  me: (parent, args, context) => {
-    return context.user; // null if not authenticated
-  },
-
-  users: (parent, args, context) => {
-    if (!context.user || context.user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-    return context.db.users.findAll();
-  },
-};
-```
+Resolvers then check `context.user` to determine what the caller is allowed to do.
 
 ### Three Authorization Patterns
 
-**1. Query/Mutation-Level**: Entire operation requires auth
+**1. Query/Mutation-Level**: Entire operation requires auth. For example, "only admins can list all users."
 
-```typescript
-// "Only admins can list all users"
-users: (parent, args, context) => {
-  requireRole(context.user, "ADMIN");
-  return db.users.findAll();
-};
-```
+**2. Entity-Level**: Filter results based on ownership. For example, "users see their own orders, admins see all orders."
 
-**2. Entity-Level**: Filter results based on ownership
-
-```typescript
-// "Users see their own orders, admins see all orders"
-orders: (parent, args, context) => {
-  if (!context.user) throw new Error("Unauthenticated");
-
-  if (context.user.role === "ADMIN") {
-    return db.orders.findAll();
-  }
-  return db.orders.findByBuyerId(context.user.id);
-};
-```
-
-**3. Field-Level**: Specific fields have access rules
-
-```typescript
-// User.email is only visible to self and admins
-User: {
-  email: (user, args, context) => {
-    const isSelf = context.user?.id === user.id;
-    const isAdmin = context.user?.role === "ADMIN";
-
-    if (!isSelf && !isAdmin) {
-      return null; // or throw an error
-    }
-    return user.email;
-  };
-}
-```
+**3. Field-Level**: Specific fields have access rules. For example, "User.email is only visible to self and admins."
 
 ## Key Concepts
 
@@ -144,25 +79,16 @@ Our domain has three roles:
 - **SELLER**: Can create/update their own products, see orders for their products
 - **ADMIN**: Can do everything
 
-Roles are stored in the database (`users.role`) and checked in business logic:
-
-```typescript
-function requireRole(user: User | null, allowedRoles: Role[]): void {
-  if (!user) throw new Error("Authentication required");
-  if (!allowedRoles.includes(user.role)) {
-    throw new Error("Insufficient permissions");
-  }
-}
-```
+Roles are stored in the database (`users.role`) and checked in business logic. A typical `requireRole` helper validates that the user is authenticated and has one of the allowed roles, throwing an error otherwise.
 
 ### Token-Based Auth (JWT)
 
 Most modern GraphQL APIs use JWTs (JSON Web Tokens):
 
 1. Client authenticates (login mutation, OAuth flow)
-2. Server returns a signed JWT containing user ID and role
-3. Client includes JWT in `Authorization: Bearer <token>` header
-4. Server verifies signature and extracts user identity
+1. Server returns a signed JWT containing user ID and role
+1. Client includes JWT in `Authorization: Bearer <token>` header
+1. Server verifies signature and extracts user identity
 
 For this stage, the test runner signs JWTs with a shared secret. Your server must verify tokens using the same secret and extract the user identity from the payload.
 
@@ -195,9 +121,9 @@ The test runner generates tokens for three pre-seeded users:
 Your authentication middleware should:
 
 1. Extract the token from the `Authorization: Bearer <token>` header
-2. Verify the signature using `JWT_SECRET`
-3. Decode the payload and populate `context.user` with `{ id: sub, email, name, role }`
-4. Set `context.user = null` if no token is present or verification fails (don't throw — let resolvers decide)
+1. Verify the signature using `JWT_SECRET`
+1. Decode the payload and populate `context.user` with `{ id: sub, email, name, role }`
+1. Set `context.user = null` if no token is present or verification fails (don't throw — let resolvers decide)
 
 In production, use asymmetric keys (RS256) or a dedicated auth service.
 
@@ -214,18 +140,7 @@ type User {
 }
 ```
 
-Implement this in the field resolver:
-
-```typescript
-User: {
-  email: (user, args, context) => {
-    if (canViewEmail(context.user, user)) {
-      return user.email;
-    }
-    return null; // Hide the email
-  };
-}
-```
+Implement this in the field resolver by checking if the requesting user has permission to see the field, and returning `null` or throwing an error if not.
 
 **Trade-off**: Returning `null` vs. throwing an error. Both are valid:
 
@@ -238,144 +153,17 @@ Choose based on your API's semantics. If the field is `String!` (non-null), you 
 
 1. **Where should authentication happen—before GraphQL or inside resolvers?** What are the trade-offs?
 
-2. **When should unauthorized access return `null` vs. throw an error?** How does this interact with nullable vs. non-nullable fields?
+1. **When should unauthorized access return `null` vs. throw an error?** How does this interact with nullable vs. non-nullable fields?
 
-3. **How do you test auth logic?** Do you test it via GraphQL queries, or unit test the auth functions separately?
+1. **How do you test auth logic?** Do you test it via GraphQL queries, or unit test the auth functions separately?
 
-4. **What goes in the JWT payload?** User ID? Role? Permissions? What are the security implications of including sensitive data?
+1. **What goes in the JWT payload?** User ID? Role? Permissions? What are the security implications of including sensitive data?
 
-5. **How do you handle token expiration?** Should expired tokens return 401, or just treat the user as unauthenticated?
+1. **How do you handle token expiration?** Should expired tokens return 401, or just treat the user as unauthenticated?
 
-6. **How do you implement field-level auth efficiently?** Do you check permissions in every field resolver?
+1. **How do you implement field-level auth efficiently?** Do you check permissions in every field resolver?
 
-7. **What's the difference between authentication errors and authorization errors?** Should they have different error codes?
-
-## Implementation Notes by Framework
-
-### graphql-js (TypeScript/JavaScript)
-
-Set up context in your server:
-
-```typescript
-const server = new ApolloServer({
-  schema,
-  context: async ({ req }) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const user = token ? await verifyToken(token) : null;
-    return { user, db, dataloaders };
-  },
-});
-```
-
-Check auth in resolvers:
-
-```typescript
-const Query = {
-  me: (parent, args, context) => context.user,
-
-  users: (parent, args, context) => {
-    if (context.user?.role !== "ADMIN") {
-      throw new GraphQLError("Unauthorized", {
-        extensions: { code: "FORBIDDEN" },
-      });
-    }
-    return db.users.findAll();
-  },
-};
-```
-
-### gqlgen (Go)
-
-Define a context struct:
-
-```go
-type Context struct {
-    User *User
-    DB   *Database
-}
-```
-
-Populate it in middleware:
-
-```go
-func AuthMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        user := extractUser(r.Header.Get("Authorization"))
-        ctx := context.WithValue(r.Context(), "auth", &Context{User: user})
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
-```
-
-Access in resolvers:
-
-```go
-func (r *queryResolver) Me(ctx context.Context) (*User, error) {
-    authCtx := ctx.Value("auth").(*Context)
-    return authCtx.User, nil
-}
-```
-
-### Strawberry (Python)
-
-Use dependency injection for context:
-
-```python
-@strawberry.type
-class Query:
-    @strawberry.field
-    def me(self, info: strawberry.Info) -> Optional[User]:
-        return info.context.user
-
-    @strawberry.field
-    def users(self, info: strawberry.Info) -> List[User]:
-        if not info.context.user or info.context.user.role != Role.ADMIN:
-            raise PermissionError("Unauthorized")
-        return get_all_users(info.context.db)
-```
-
-### Hot Chocolate (.NET)
-
-Use `[Authorize]` attributes or custom auth directives:
-
-```csharp
-public class Query {
-    public User? Me([Service] IHttpContextAccessor accessor) {
-        return accessor.HttpContext?.User?.Identity?.IsAuthenticated == true
-            ? GetCurrentUser(accessor)
-            : null;
-    }
-
-    [Authorize(Roles = "ADMIN")]
-    public List<User> GetUsers([Service] IUserRepository repo) {
-        return repo.GetAll();
-    }
-}
-```
-
-### graphql-java (Java/Kotlin)
-
-Populate context in `DataFetchingEnvironment`:
-
-```java
-GraphQL graphQL = GraphQL.newGraphQL(schema)
-    .defaultDataFetcherExceptionHandler(...)
-    .build();
-
-ExecutionInput input = ExecutionInput.newExecutionInput()
-    .context(new Context(user, db))
-    .query(query)
-    .build();
-```
-
-Access in data fetchers:
-
-```java
-DataFetcher<User> meDataFetcher = environment -> {
-    Context ctx = environment.getContext();
-    return ctx.getUser();
-};
-```
+1. **What's the difference between authentication errors and authorization errors?** Should they have different error codes?
 
 ## Official Documentation
 
@@ -387,17 +175,17 @@ DataFetcher<User> meDataFetcher = environment -> {
 
 1. **Putting auth logic in resolvers**: Resolvers should call business logic functions that do auth. Don't inline permission checks everywhere.
 
-2. **Not handling unauthenticated vs. unauthorized**: `401 Unauthorized` means "not authenticated." `403 Forbidden` means "authenticated but not authorized."
+1. **Not handling unauthenticated vs. unauthorized**: `401 Unauthorized` means "not authenticated." `403 Forbidden` means "authenticated but not authorized."
 
-3. **Leaking existence via error messages**: Don't say "Order not found" vs. "Unauthorized to view order." Both should return the same error to avoid leaking information.
+1. **Leaking existence via error messages**: Don't say "Order not found" vs. "Unauthorized to view order." Both should return the same error to avoid leaking information.
 
-4. **Overly permissive default**: Make the default "deny access" and explicitly allow operations. Never default to "allow."
+1. **Overly permissive default**: Make the default "deny access" and explicitly allow operations. Never default to "allow."
 
-5. **Ignoring field-level auth**: Just because a user can query `Product` doesn't mean they can see `Product.seller.email`.
+1. **Ignoring field-level auth**: Just because a user can query `Product` doesn't mean they can see `Product.seller.email`.
 
-6. **Hard-coding roles in resolvers**: Extract role checks to reusable functions or decorators.
+1. **Hard-coding roles in resolvers**: Extract role checks to reusable functions or decorators.
 
-7. **Not testing unauthenticated state**: Most tests authenticate by default. Explicitly test what happens when `context.user` is null.
+1. **Not testing unauthenticated state**: Most tests authenticate by default. Explicitly test what happens when `context.user` is null.
 
 ## What Success Looks Like
 
@@ -411,3 +199,11 @@ After completing this stage:
 - Error messages don't leak information about resources users can't access
 
 The test suite will verify these behaviors by making authenticated and unauthenticated requests, testing different roles, and attempting to access restricted fields. Your implementation should enforce all auth rules consistently.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=11 bun run --cwd test-runner test:stage
+```

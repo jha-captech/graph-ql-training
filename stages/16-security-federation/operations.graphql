@@ -1,6 +1,7 @@
 # Stage 16: Security & Federation Operations
-# This file contains example operations for testing security measures
-# and demonstrating federation concepts.
+# These are CLIENT OPERATIONS (queries/mutations), NOT schema definitions.
+# Do NOT include this file in your server's schema configuration.
+# Use these for manual testing in GraphiQL, Postman, or similar tools.
 
 # ============================================================================
 # SAFE QUERIES: These should work

@@ -31,80 +31,6 @@ This is elegant for developer experience—resolvers are simple, single-purpose 
 - **Where do you create DataLoaders?** How do they get passed to resolvers?
 - **What's the difference between DataLoader's cache and a shared cache like Redis?** When would you use each?
 
-## Implementation Notes
-
-### graphql-js (JavaScript/TypeScript)
-
-Import the `dataloader` package. Create DataLoader instances in your context function:
-
-```typescript
-context: ({ req }) => ({
-  loaders: {
-    product: new DataLoader((keys) => batchGetProducts(keys)),
-    reviews: new DataLoader((keys) => batchGetReviewsByProductId(keys)),
-    user: new DataLoader((keys) => batchGetUsers(keys)),
-  },
-});
-```
-
-In resolvers, use `context.loaders.product.load(id)` instead of direct database calls.
-
-### gqlgen (Go)
-
-Use the [dataloaden](https://github.com/vektah/dataloaden) code generator or implement batching manually. Create loaders in the resolver middleware:
-
-```go
-ctx = context.WithValue(ctx, loadersKey, &Loaders{
-    ProductLoader: NewProductLoader(db),
-})
-```
-
-In resolvers, extract loaders from context and call `loader.Load(ctx, id)`.
-
-### Hot Chocolate (.NET)
-
-Use Hot Chocolate's built-in DataLoader support via `[DataLoader]` attributes. Define loader classes implementing `BatchDataLoader<TKey, TValue>`:
-
-```csharp
-public class ProductBatchDataLoader : BatchDataLoader<string, Product>
-{
-    protected override async Task<IReadOnlyDictionary<string, Product>> LoadBatchAsync(
-        IReadOnlyList<string> keys, CancellationToken ct)
-    {
-        // Batch query here
-    }
-}
-```
-
-Register in DI, and Hot Chocolate injects them automatically.
-
-### Strawberry (Python)
-
-Use the [strawberry-graphql-dataloaders](https://github.com/strawberry-graphql/strawberry-graphql-django/tree/main/strawberry_django) library or [aiodataloader](https://github.com/syrusakbary/aiodataloader). Create loaders in the context:
-
-```python
-async def get_context():
-    return {
-        "loaders": {
-            "product": DataLoader(load_fn=batch_load_products),
-            "reviews": DataLoader(load_fn=batch_load_reviews),
-        }
-    }
-```
-
-In resolvers, use `await info.context["loaders"]["product"].load(id)`.
-
-### graphql-java (Java)
-
-Use the [java-dataloader](https://github.com/graphql-java/java-dataloader) library. Create loaders in the `DataFetchingEnvironment`:
-
-```java
-DataLoaderRegistry registry = new DataLoaderRegistry();
-registry.register("products", new DataLoader<>(keys -> CompletableFuture.supplyAsync(() -> batchLoadProducts(keys))));
-```
-
-In data fetchers, get the loader: `env.getDataLoader("products").load(id)`.
-
 ## Official GraphQL Documentation
 
 - [DataLoader GitHub Repository](https://github.com/graphql/dataloader) - Reference implementation with detailed explanation
@@ -116,9 +42,9 @@ In data fetchers, get the loader: `env.getDataLoader("products").load(id)`.
 You'll refactor your existing resolvers to use DataLoader for:
 
 1. **Product-to-Category relationships:** Batch load categories for products
-2. **Product-to-Review relationships:** Batch load reviews for products
-3. **Review-to-User relationships:** Batch load authors for reviews
-4. **Review-to-Product relationships:** Batch load products for reviews (if needed)
+1. **Product-to-Review relationships:** Batch load reviews for products
+1. **Review-to-User relationships:** Batch load authors for reviews
+1. **Review-to-Product relationships:** Batch load products for reviews (if needed)
 
 Your schema remains identical to Stage 07. All tests from previous stages must still pass. The difference is performance: queries that previously executed dozens or hundreds of database queries now execute a handful.
 
@@ -150,3 +76,11 @@ This is the difference between a timeout and sub-second response.
 - **Not awaiting DataLoader promises:** In async runtimes, forgetting `await` breaks batching.
 
 This stage is critical for production readiness. A GraphQL server without DataLoader is a prototype, not a product.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=08 bun run --cwd test-runner test:stage
+```

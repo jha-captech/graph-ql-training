@@ -203,162 +203,25 @@ Clients can switch on `extensions.code` instead of parsing strings.
 
 ### Validation Layer
 
-Don't validate in resolvers—extract validation to a separate layer:
-
-```typescript
-// Bad: validation in resolver
-async createProduct(parent, args, context) {
-  if (!args.input.title) {
-    throw new Error("Title required");
-  }
-  // ...
-}
-
-// Good: validation layer
-async createProduct(parent, args, context) {
-  const validation = validateProductInput(args.input);
-  if (!validation.success) {
-    return { __typename: "ValidationError", ...validation.error };
-  }
-  // ...
-}
-```
-
-This keeps resolvers focused on orchestration, not business rules.
+Don't validate in resolvers—extract validation to a separate layer. Keep resolvers focused on orchestration, not business rules. A validation function should return structured results that can be mapped to union error types.
 
 ### Error Formatting Hook
 
-Most GraphQL servers provide a hook to format errors before sending them to clients:
-
-```typescript
-const server = new ApolloServer({
-  schema,
-  formatError: (error) => {
-    // Remove stack traces in production
-    if (process.env.NODE_ENV === "production") {
-      delete error.extensions.exception;
-    }
-    // Add error codes
-    error.extensions.code = classifyError(error);
-    return error;
-  },
-});
-```
-
-Use this to sanitize errors and add consistent structure.
+Most GraphQL servers provide a hook to format errors before sending them to clients. Use this to sanitize errors (remove stack traces in production) and add consistent structure (error codes, timestamps).
 
 ## Key Questions
 
 1. **When should an error go in the top-level `errors` array vs. a union result type?** What's the decision criteria?
 
-2. **What happens when a non-null field's resolver throws?** Trace the null propagation through the response tree.
+1. **What happens when a non-null field's resolver throws?** Trace the null propagation through the response tree.
 
-3. **How do you distinguish between "field is null because the data is null" vs. "field is null because an error occurred"?** Check the `errors` array and match by `path`.
+1. **How do you distinguish between "field is null because the data is null" vs. "field is null because an error occurred"?** Check the `errors` array and match by `path`.
 
-4. **What information should you include in error `extensions` in development vs. production?** Stack traces? Database error messages?
+1. **What information should you include in error `extensions` in development vs. production?** Stack traces? Database error messages?
 
-5. **Why use error codes instead of just messages?** What happens when you need to change a message for i18n?
+1. **Why use error codes instead of just messages?** What happens when you need to change a message for i18n?
 
-6. **How do you test error scenarios?** Do you trigger them with invalid inputs, or mock underlying layers to fail?
-
-## Implementation Notes by Framework
-
-### graphql-js (TypeScript/JavaScript)
-
-Throw `GraphQLError` for top-level errors:
-
-```typescript
-import { GraphQLError } from "graphql";
-
-throw new GraphQLError("Product not found", {
-  extensions: { code: "NOT_FOUND" },
-});
-```
-
-For union errors, return objects:
-
-```typescript
-if (!isValid) {
-  return {
-    __typename: "ValidationError",
-    message: "Invalid input",
-    field: "title",
-    code: "REQUIRED_FIELD",
-  };
-}
-return {
-  __typename: "CreateProductSuccess",
-  product: newProduct,
-};
-```
-
-### gqlgen (Go)
-
-Define error types that implement the error interface:
-
-```go
-type ValidationError struct {
-    Message string
-    Field   *string
-    Code    string
-}
-```
-
-Resolvers return these types directly. gqlgen handles the union discrimination.
-
-### Strawberry (Python)
-
-Use Python's union syntax:
-
-```python
-@strawberry.type
-class ValidationError:
-    message: str
-    field: Optional[str]
-    code: str
-
-CreateProductResult = Union[CreateProductSuccess, ValidationError]
-
-@strawberry.mutation
-def create_product(self, input: CreateProductInput) -> CreateProductResult:
-    if not input.title:
-        return ValidationError(
-            message="Title is required",
-            field="title",
-            code="REQUIRED_FIELD"
-        )
-    return CreateProductSuccess(product=new_product)
-```
-
-### Hot Chocolate (.NET)
-
-Hot Chocolate has built-in error handling via exceptions with error filters:
-
-```csharp
-public class ValidationError {
-    public string Message { get; set; }
-    public string? Field { get; set; }
-    public string Code { get; set; }
-}
-
-[UnionType("CreateProductResult")]
-public interface ICreateProductResult { }
-
-public class CreateProductSuccess : ICreateProductResult {
-    public Product Product { get; set; }
-}
-```
-
-### graphql-java (Java/Kotlin)
-
-Throw `GraphQLException` or implement `GraphQLError` interface:
-
-```java
-throw new GraphQLException("Product not found",
-    Map.of("code", "NOT_FOUND"));
-```
-
-For union returns, use inheritance and return the appropriate subtype.
+1. **How do you test error scenarios?** Do you trigger them with invalid inputs, or mock underlying layers to fail?
 
 ## Official Documentation
 
@@ -370,15 +233,15 @@ For union returns, use inheritance and return the appropriate subtype.
 
 1. **Exposing internal errors**: Never send raw database errors or stack traces to clients in production. Filter via `formatError`.
 
-2. **Overusing top-level errors for validation**: Validation failures are not exceptional—use union result types instead.
+1. **Overusing top-level errors for validation**: Validation failures are not exceptional—use union result types instead.
 
-3. **Inconsistent error codes**: Define error codes as constants/enums, not magic strings scattered through resolvers.
+1. **Inconsistent error codes**: Define error codes as constants/enums, not magic strings scattered through resolvers.
 
-4. **Forgetting error paths**: Include `path` in errors so clients know which field failed in complex queries.
+1. **Forgetting error paths**: Include `path` in errors so clients know which field failed in complex queries.
 
-5. **Non-null fields causing cascade failures**: Be conservative with `!`. A single non-null field error nulls the entire parent.
+1. **Non-null fields causing cascade failures**: Be conservative with `!`. A single non-null field error nulls the entire parent.
 
-6. **Poor error messages**: "Invalid input" is useless. "Email must be a valid email address" is actionable.
+1. **Poor error messages**: "Invalid input" is useless. "Email must be a valid email address" is actionable.
 
 ## What Success Looks Like
 
@@ -392,3 +255,11 @@ After completing this stage:
 - Both success and error paths are tested
 
 The test suite will verify all of these behaviors through scenarios that trigger validation errors, system errors, and partial successes. Your implementation should handle each case according to GraphQL best practices.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=10 bun run --cwd test-runner test:stage
+```

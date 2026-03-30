@@ -1,5 +1,7 @@
 # Sample Operations for Stage 13: Subscriptions
-# Use these queries to manually explore the subscription functionality
+# These are CLIENT OPERATIONS (queries/mutations), NOT schema definitions.
+# Do NOT include this file in your server's schema configuration.
+# Use these for manual testing in GraphiQL, Postman, or similar tools.
 
 # ============================================================
 # SUBSCRIPTIONS

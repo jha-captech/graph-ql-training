@@ -146,3 +146,5 @@ vite.config.ts.timestamp-*
 
 **/reports/
 **/.env
+**/CLAUDE.local.md
+**/.DS_Store

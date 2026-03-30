@@ -33,28 +33,6 @@ Abstract types are GraphQL's answer to "how do I query heterogeneous data?" When
 - **What happens if you query a union without inline fragments?** Will it return anything?
 - **How do you handle a new type being added to a union?** What breaks in existing queries?
 
-## Implementation Notes
-
-### graphql-js (JavaScript/TypeScript)
-
-Interfaces require a `resolveType` function that returns the concrete type name (e.g., `"Product"`). Unions require the same. For `node(id)`, decode the ID to determine the type, then call the appropriate data loader or resolver. Use `GraphQLInterfaceType` and `GraphQLUnionType` in schema definitions.
-
-### gqlgen (Go)
-
-In the schema, declare interfaces and unions in SDL. gqlgen generates `Is<InterfaceName>()` methods on each implementing type. For `resolveType`, return the type name string. For `node(id)`, parse the ID and dispatch to the correct resolver. Use type assertions to distinguish union members.
-
-### Hot Chocolate (.NET)
-
-Interfaces are defined via classes or interfaces annotated with `[InterfaceType]`. Unions use `[UnionType]`. Implement `Resolve` methods for abstract types to return the correct concrete instance. For `node(id)`, decode the ID and call the appropriate repository method. Hot Chocolate handles `__typename` automatically.
-
-### Strawberry (Python)
-
-Define interfaces with `@strawberry.interface` and unions with `strawberry.union`. Implement `resolve_type` for interfaces and unions to return the concrete type. For `node(id)`, decode the ID and dispatch to the correct data loader. Use `typing.Union` for union types.
-
-### graphql-java (Java)
-
-Use `GraphQLInterfaceType` and `GraphQLUnionType`. Implement `TypeResolver` to return the correct `GraphQLObjectType` for interfaces and unions. For `node(id)`, parse the global ID and call the appropriate service method. Use `instanceof` checks to handle union types.
-
 ## Official GraphQL Documentation
 
 - [Schemas - Interfaces](https://graphql.org/learn/schema/#interfaces)
@@ -69,10 +47,10 @@ Use `GraphQLInterfaceType` and `GraphQLUnionType`. Implement `TypeResolver` to r
 You'll modify existing types to implement interfaces and add two new query fields:
 
 1. **Node interface:** Applied to Product, Category, User, Review—all have `id: ID!`
-2. **Timestamped interface:** Applied to Product, User, Review—all have `createdAt` and `updatedAt`
-3. **SearchResult union:** `Product | Category | User`
-4. **node(id: ID!)** query: Fetch any entity by global ID
-5. **search(term: String!)** query: Full-text search returning mixed types
+1. **Timestamped interface:** Applied to Product, User, Review—all have `createdAt` and `updatedAt`
+1. **SearchResult union:** `Product | Category | User`
+1. **node(id: ID!)** query: Fetch any entity by global ID
+1. **search(term: String!)** query: Full-text search returning mixed types
 
 Your schema is now more expressive: clients can fetch "anything with an ID" via `node`, or search across multiple entity types with `search`. The type system enforces correct usage—clients must use inline fragments to access type-specific fields on unions.
 
@@ -88,3 +66,11 @@ The feature files verify:
 - A type implementing multiple interfaces exposes all interface fields
 
 This stage tests your GraphQL execution engine's handling of abstract types, a critical feature for advanced schemas.
+
+## Run Tests
+
+From the repo root:
+
+```bash
+STAGE=07 bun run --cwd test-runner test:stage
+```
