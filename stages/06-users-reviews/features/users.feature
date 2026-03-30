@@ -1,4 +1,4 @@
-@stage:06
+@stage:06 @db:reset
 Feature: User Queries and Relationships
 
   Background:
