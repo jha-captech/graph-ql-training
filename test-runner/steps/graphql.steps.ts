@@ -227,7 +227,9 @@ When(
   function (this: GraphQLWorld, subscription: string) {
     return new Promise<void>((resolve, reject) => {
       const wsUrl = this.endpoint.replace(/^http/, "ws");
-      const ws = new WebSocket(wsUrl, "graphql-transport-ws");
+      const headers: Record<string, string> = {};
+      if (this.authHeader) headers["Authorization"] = this.authHeader;
+      const ws = new WebSocket(wsUrl, "graphql-transport-ws", { headers });
 
       ws.on("open", () => {
         ws.send(JSON.stringify({ type: "connection_init" }));
@@ -248,7 +250,7 @@ When(
         }
 
         if (msg.type === "next") {
-          this.subscriptionEvents.push({ data: msg.payload.data });
+          this.subscriptionEvents.push({ data: msg.payload });
         }
 
         if (msg.type === "error") {
@@ -1123,7 +1125,9 @@ When(
   function (this: GraphQLWorld, subscription: string) {
     return new Promise<void>((resolve, reject) => {
       const wsUrl = this.endpoint.replace(/^http/, "ws");
-      const ws = new WebSocket(wsUrl, "graphql-transport-ws");
+      const headers: Record<string, string> = {};
+      if (this.authHeader) headers["Authorization"] = this.authHeader;
+      const ws = new WebSocket(wsUrl, "graphql-transport-ws", { headers });
 
       ws.on("open", () => {
         ws.send(JSON.stringify({ type: "connection_init" }));
@@ -1142,7 +1146,7 @@ When(
           resolve();
         }
         if (msg.type === "next") {
-          this.subscriptionEvents.push({ data: msg.payload.data });
+          this.subscriptionEvents.push({ data: msg.payload });
         }
       });
 
@@ -1184,13 +1188,17 @@ Then(
 Then(
   "the subscription should receive an event within {int} seconds",
   async function (this: GraphQLWorld, seconds: number) {
+    const startLength = this.subscriptionEvents.length;
     const deadline = Date.now() + seconds * 1000;
-    while (this.subscriptionEvents.length === 0 && Date.now() < deadline) {
+    while (
+      this.subscriptionEvents.length <= startLength &&
+      Date.now() < deadline
+    ) {
       await new Promise((r) => setTimeout(r, 100));
     }
     assert.ok(
-      this.subscriptionEvents.length > 0,
-      `No subscription event received within ${seconds} seconds`,
+      this.subscriptionEvents.length > startLength,
+      `No new subscription event received within ${seconds} seconds`,
     );
   },
 );
